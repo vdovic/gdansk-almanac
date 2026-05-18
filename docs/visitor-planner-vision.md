@@ -274,7 +274,20 @@ Layer 15 figures with concrete visitable locations:
 - [x] Polish diacritics transliterated (ą→a, ł→l, etc.) for PDF font compatibility
 - [x] Empty plan shows toast instead of generating blank PDF
 
-### Phase 8 — Refinement
+### Phase 8 — Enrichment ✅ DONE
+- [x] URL encoding limit raised from 2000 → 12000 characters
+- [x] Plan Library: save up to 30 named plans in `localStorage` (`almanac-saved-plans`)
+  - Save current plan with a custom name
+  - Load, delete, rename saved plans
+  - Panel toggled via "Plans" button in planner header
+- [x] Quick search on planner page: Jira-style live search over all 71 eligible locations
+  - Floating results with layer colour dot, name, layer name, estimated time
+  - Clicking a result opens the day picker
+- [x] Curated starter routes for 1–7 days via ★ Route button
+  - Each day designed for 300–390 min (5–6.5 h)
+  - Thematically balanced: Old Town, Solidarity, Maritime, Oliwa, Amber, WWII, hidden gems
+
+### Phase 9 — Refinement
 - [ ] Visual polish: empty states, loading, transitions
 - [ ] Mobile UX improvements
 - [ ] Custom item entry (free-text location not in Almanac)

@@ -852,6 +852,16 @@ function generatePDF() {
       }
       y += 5;
 
+      // Address (for custom items)
+      if (item.address) {
+        checkY(5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(130, 105, 80);
+        doc.text(depolish(item.address), ML + 6, y);
+        y += 5;
+      }
+
       // Short description (max 2 lines)
       if (item.shortDescription) {
         const lines = doc.splitTextToSize(depolish(item.shortDescription), CW - 8).slice(0, 2);
@@ -1002,6 +1012,8 @@ function renderPlannerView() {
 
   const colTemplate = `repeat(${plan.numberOfDays}, minmax(0, 1fr))`;
 
+  const libClass = _libraryOpen ? ' active' : '';
+
   view.innerHTML = `
     <div class="planner-page-header">
       <div class="planner-title-group">
@@ -1011,16 +1023,59 @@ function renderPlannerView() {
       <div class="planner-controls">
         <span class="planner-days-label">Days:</span>
         <div class="planner-day-btns">${dayBtnsHTML}</div>
+        <button class="planner-recommend-btn" onclick="loadStarterPlan(${plan.numberOfDays})" title="Load curated ${plan.numberOfDays}-day route">★ Route</button>
+        <button id="planner-library-btn" class="planner-library-btn${libClass}" onclick="togglePlannerLibrary()">Plans</button>
         <button class="planner-export-btn" onclick="exportToPDF()">Export PDF</button>
         <button class="planner-share-btn" onclick="copyShareLink()">Share link</button>
         <button class="planner-back-btn" onclick="location.hash=''">← Almanac</button>
       </div>
     </div>
+
+    <div id="planner-library-panel" class="planner-library-panel" style="${_libraryOpen ? '' : 'display:none'}"></div>
+
+    <div class="planner-search-row">
+      <div class="planner-search-wrap">
+        <span class="psearch-icon">⌕</span>
+        <input type="search" id="planner-search-input" class="planner-search-input"
+               placeholder="Search places to add to your plan…" autocomplete="off">
+        <div id="planner-search-results" class="planner-search-results" style="display:none"></div>
+      </div>
+    </div>
+
     <div class="planner-days-wrapper">
       <div class="planner-days-grid" style="grid-template-columns:${colTemplate}">${daysHTML}</div>
     </div>
     ${unassignedHTML}
-    ${emptyStateHTML}`;
+    ${emptyStateHTML}
+
+    <div id="custom-item-modal" class="custom-item-modal" style="display:none" onclick="cancelCustomItemIfBg(event)">
+      <div class="custom-item-box">
+        <div class="custom-item-title">Add Custom Place</div>
+        <div class="custom-item-fields">
+          <label class="ci-label">Name <span class="ci-required">*</span></label>
+          <input id="ci-name" class="ci-input" type="text" placeholder="e.g. Kartuzy Heritage Tour" maxlength="80">
+
+          <label class="ci-label">Duration (minutes)</label>
+          <input id="ci-minutes" class="ci-input ci-short" type="number" value="60" min="5" max="600" step="5">
+
+          <label class="ci-label">Address</label>
+          <input id="ci-address" class="ci-input" type="text" placeholder="e.g. Kartuzy, Pomerania, Poland" maxlength="120">
+
+          <label class="ci-label">Google Maps URL or lat,lng</label>
+          <input id="ci-maps" class="ci-input" type="text" placeholder="Paste a Maps link, or e.g. 54.33,18.20" maxlength="300">
+
+          <label class="ci-label">Short description (optional)</label>
+          <input id="ci-desc" class="ci-input" type="text" placeholder="Brief context for the PDF…" maxlength="200">
+
+          <label class="ci-label">Add to day</label>
+          <select id="ci-day" class="ci-input ci-short"></select>
+        </div>
+        <div class="custom-item-actions">
+          <button class="ci-cancel-btn" onclick="cancelCustomItem()">Cancel</button>
+          <button class="ci-confirm-btn" onclick="confirmCustomItem()">Add to plan</button>
+        </div>
+      </div>
+    </div>`;
 
   // Wire up notes and title inputs after DOM is ready
   view.querySelectorAll('.planner-item-notes').forEach(ta => {
@@ -1033,6 +1088,8 @@ function renderPlannerView() {
     inp.addEventListener('blur', () => planUpdateDay(+inp.dataset.dayNumber, { title: inp.value }));
   });
 
+  if (_libraryOpen) renderLibraryPanel();
+  initPlannerSearch();
   initPlannerSortable();
 }
 
@@ -1065,6 +1122,7 @@ function renderPlannerDay(day) {
         <div>No places yet.<br>Tap <strong>+ Plan</strong> on any card.</div>
       </div>
       <div class="planner-day-footer">
+        <button class="planner-add-custom-btn" onclick="openCustomItemModal(${day.dayNumber})">＋ Custom place</button>
         <textarea class="planner-day-notes" data-day-number="${day.dayNumber}"
                   rows="2" placeholder="Day notes…">${escapeText(day.notes)}</textarea>
       </div>
@@ -1077,14 +1135,17 @@ function renderPlannerItem(item, num) {
     ? `<a class="planner-item-map-link" href="${item.googleMapsUrl}" target="_blank" rel="noopener">↗ Maps</a>`
     : '';
 
+  const customBadge = item.type === 'custom' ? '<span class="planner-item-custom-badge">custom</span>' : '';
+
   return `
-    <div class="planner-item" data-item-id="${item.id}">
+    <div class="planner-item${item.type === 'custom' ? ' planner-item-custom' : ''}" data-item-id="${item.id}">
       <div class="planner-item-main">
         <div class="planner-item-drag-handle" title="Drag to reorder">⠿</div>
         ${numBadge}
         <div class="planner-item-body">
-          <div class="planner-item-name">${item.title}</div>
-          ${item.shortDescription ? `<div class="planner-item-desc">${item.shortDescription}</div>` : ''}
+          <div class="planner-item-name">${escapeText(item.title)}${customBadge}</div>
+          ${item.shortDescription ? `<div class="planner-item-desc">${escapeText(item.shortDescription)}</div>` : ''}
+          ${item.address ? `<div class="planner-item-address">${escapeText(item.address)}</div>` : ''}
           <div class="planner-item-meta">
             <span class="planner-item-time">${planFormatMinutes(item.estimatedMinutes)}</span>
             ${mapsLink}
@@ -1319,6 +1380,376 @@ function init() {
   });
 }
 
+// ── Curated starter routes ────────────────────────────────────────────────
+// Each entry: array of days, each day is an array of sourceIds in visit order.
+// Designed to stay within 300–390 min (5–6.5 h) per day.
+const STARTER_PLANS = {
+  1: [
+    // Essential Gdańsk in one day
+    ['02-1', '01-2', '01-5', '11-1', '09-3', '13-1']
+  ],
+  2: [
+    // Day 1: Old Town & waterfront
+    ['02-1', '01-2', '03-3', '01-5', '09-3', '13-1'],
+    // Day 2: Solidarity, WWII & dinner
+    ['08-1', '08-2', '08-3', '05-1', '14-1']
+  ],
+  3: [
+    ['02-1', '01-2', '03-3', '01-5', '09-3', '13-1'],
+    ['08-1', '08-2', '08-3', '05-1', '14-1'],
+    // Day 3: Maritime, Oliwa & figures
+    ['04-5', '04-1', '02-2', '10-1', '15-3', '15-2', '13-2']
+  ],
+  4: [
+    ['02-1', '01-2', '03-3', '01-5', '09-3', '13-1'],
+    ['08-1', '08-2', '08-3', '05-1', '14-1'],
+    ['04-5', '04-1', '02-2', '10-1', '15-3', '15-2', '13-2'],
+    // Day 4: Amber, Arsenal & the Invisible City
+    ['09-1', '09-2', '06-1', '12-1', '12-2', '12-3', '16-3', '14-2']
+  ],
+  5: [
+    ['02-1', '01-2', '03-3', '01-5', '09-3', '13-1'],
+    ['08-1', '08-2', '08-3', '05-1', '14-1'],
+    ['04-5', '04-1', '02-2', '10-1', '15-3', '15-2', '13-2'],
+    ['09-1', '09-2', '06-1', '12-1', '12-2', '12-3', '16-3', '14-2'],
+    // Day 5: WWII Museum, literature & canals
+    ['05-3', '15-6', '07-5', '07-2', '11-2', '13-4']
+  ],
+  6: [
+    ['02-1', '01-2', '03-3', '01-5', '09-3', '13-1'],
+    ['08-1', '08-2', '08-3', '05-1', '14-1'],
+    ['04-5', '04-1', '02-2', '10-1', '15-3', '15-2', '13-2'],
+    ['09-1', '09-2', '06-1', '12-1', '12-2', '12-3', '16-3', '14-2'],
+    ['05-3', '15-6', '07-5', '07-2', '11-2', '13-4'],
+    // Day 6: Fortress, pier, valley & Schopenhauer
+    ['05-2', '04-4', '10-2', '15-1', '03-2', '03-4', '14-3']
+  ],
+  7: [
+    ['02-1', '01-2', '03-3', '01-5', '09-3', '13-1'],
+    ['08-1', '08-2', '08-3', '05-1', '14-1'],
+    ['04-5', '04-1', '02-2', '10-1', '15-3', '15-2', '13-2'],
+    ['09-1', '09-2', '06-1', '12-1', '12-2', '12-3', '16-3', '14-2'],
+    ['05-3', '15-6', '07-5', '07-2', '11-2', '13-4'],
+    ['05-2', '04-4', '10-2', '15-1', '03-2', '03-4', '14-3'],
+    // Day 7: Hidden gems — post office, Road to Freedom, carillon, shipyard
+    ['06-5', '08-5', '07-3', '16-1', '03-5', '04-3', '15-7']
+  ]
+};
+
+function loadStarterPlan(n) {
+  const dayLists = STARTER_PLANS[n];
+  if (!dayLists) return;
+  if (planGetTotalItemCount() > 0) {
+    if (!confirm(`Replace your current plan with the recommended ${n}-day Gdańsk route?`)) return;
+  }
+  // Reset to empty then grow/shrink to n days
+  planReset();
+  planSetDayCount(n);
+  for (let d = 0; d < dayLists.length; d++) {
+    for (const sourceId of dayLists[d]) {
+      const layerId = sourceId.slice(0, 2);
+      const layer = ALMANAC.getLayer(layerId);
+      if (!layer) continue;
+      const loc = layer.locations.find(l => l.id === sourceId);
+      if (!loc) continue;
+      planAddItem(loc, layer, d + 1);
+    }
+  }
+  updatePlanBadge();
+  renderPlannerView();
+  showPlanToast(`${n}-day recommended route loaded`);
+}
+
+// ── Plan Library UI ───────────────────────────────────────────────────────
+let _libraryOpen = false;
+
+function togglePlannerLibrary() {
+  _libraryOpen = !_libraryOpen;
+  const panel = document.getElementById('planner-library-panel');
+  const btn   = document.getElementById('planner-library-btn');
+  if (!panel) return;
+  panel.style.display = _libraryOpen ? '' : 'none';
+  if (btn) btn.classList.toggle('active', _libraryOpen);
+  if (_libraryOpen) renderLibraryPanel();
+}
+
+function renderLibraryPanel() {
+  const panel = document.getElementById('planner-library-panel');
+  if (!panel) return;
+  const saved = planGetSaved();
+  const count = saved.length;
+
+  const listHTML = count === 0
+    ? '<p class="library-empty">No saved plans yet. Save your current plan above.</p>'
+    : saved.map(entry => {
+        const date = entry.savedAt
+          ? new Date(entry.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+          : '';
+        const days = entry.numberOfDays || '?';
+        const items = entry.itemCount || 0;
+        const nameAttr = escapeAttr(entry.name);
+        return `
+          <div class="library-item" data-id="${entry.id}">
+            <div class="library-item-info">
+              <span class="library-item-name" contenteditable="true" data-id="${entry.id}"
+                    onblur="renameLibraryPlan('${entry.id}', this)">${escapeText(entry.name)}</span>
+              <span class="library-item-meta">${days}d · ${items} places · ${date}</span>
+            </div>
+            <div class="library-item-actions">
+              <button class="library-btn library-load" onclick="loadLibraryPlan('${entry.id}')">Load</button>
+              <button class="library-btn library-delete" onclick="deleteLibraryPlan('${entry.id}')">×</button>
+            </div>
+          </div>`;
+      }).join('');
+
+  const capacityNote = count >= 30
+    ? '<p class="library-full-note">Library full (30/30). Delete a plan to save a new one.</p>'
+    : `<p class="library-capacity">${count}/30 plans saved</p>`;
+
+  panel.innerHTML = `
+    <div class="library-save-row">
+      <input type="text" id="library-name-input" class="library-name-input"
+             placeholder="Name this plan…" maxlength="60">
+      <button class="library-save-btn" onclick="saveCurrentPlan()">Save</button>
+    </div>
+    <div class="library-list">${listHTML}</div>
+    ${capacityNote}`;
+}
+
+function saveCurrentPlan() {
+  if (planGetTotalItemCount() === 0) {
+    showPlanToast('Add places to your plan before saving', 'warn');
+    return;
+  }
+  const input = document.getElementById('library-name-input');
+  const name = (input ? input.value.trim() : '') || 'My Gdańsk Visit';
+  const result = planSaveToLibrary(name);
+  if (result === 'full') {
+    showPlanToast('Library full (30 plans) — delete one to save', 'warn');
+  } else if (result) {
+    if (input) input.value = '';
+    showPlanToast(`Saved: "${name}"`);
+    renderLibraryPanel();
+  } else {
+    showPlanToast('Could not save plan', 'warn');
+  }
+}
+
+function loadLibraryPlan(id) {
+  const saved = planGetSaved();
+  const entry = saved.find(s => s.id === id);
+  if (!entry) return;
+  if (planGetTotalItemCount() > 0) {
+    if (!confirm(`Load "${entry.name}"? This will replace your current plan.`)) return;
+  }
+  planLoadFromLibrary(id);
+  updatePlanBadge();
+  _libraryOpen = false;
+  renderPlannerView();
+  showPlanToast(`Loaded: "${entry.name}"`);
+}
+
+function deleteLibraryPlan(id) {
+  const saved = planGetSaved();
+  const entry = saved.find(s => s.id === id);
+  if (!entry) return;
+  if (!confirm(`Delete "${entry.name}"?`)) return;
+  planDeleteFromLibrary(id);
+  renderLibraryPanel();
+  showPlanToast('Plan deleted');
+}
+
+function renameLibraryPlan(id, el) {
+  const newName = (el.textContent || '').trim();
+  if (newName) {
+    planRenameInLibrary(id, newName);
+  } else {
+    // Restore old name if blank
+    const entry = planGetSaved().find(s => s.id === id);
+    if (entry) el.textContent = entry.name;
+  }
+}
+
+// ── Planner quick search ───────────────────────────────────────────────────
+let _searchAllLocs = null;
+
+function getPlannerSearchIndex() {
+  if (_searchAllLocs) return _searchAllLocs;
+  _searchAllLocs = [];
+  for (const layer of ALMANAC.layers) {
+    for (const loc of layer.locations) {
+      if (!isPlanEligible(loc, layer)) continue;
+      _searchAllLocs.push({ loc, layer });
+    }
+  }
+  return _searchAllLocs;
+}
+
+function initPlannerSearch() {
+  const input = document.getElementById('planner-search-input');
+  const results = document.getElementById('planner-search-results');
+  if (!input || !results) return;
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { results.innerHTML = ''; results.style.display = 'none'; return; }
+
+    const matches = getPlannerSearchIndex().filter(({ loc, layer }) => {
+      const text = [
+        loc.namePL, loc.nameEN, loc.subheading, loc.role,
+        layer.titlePL, layer.titleEN,
+        getLocNarrative(loc)
+      ].filter(Boolean).join(' ').toLowerCase();
+      return text.includes(q);
+    }).slice(0, 12);
+
+    if (matches.length === 0) {
+      results.innerHTML = '<div class="psearch-empty">No matching places</div>';
+      results.style.display = '';
+      return;
+    }
+
+    results.innerHTML = matches.map(({ loc, layer }) => {
+      const mins = loc.estimatedMinutes || PLAN_MINUTES_BY_LAYER[layer.id] || 30;
+      return `
+        <div class="psearch-item" onclick="plannerSearchSelect('${loc.id}','${layer.id}',event)">
+          <span class="psearch-dot" style="background:${layer.colour}"></span>
+          <span class="psearch-name">${escapeText(loc.nameEN || loc.namePL)}</span>
+          <span class="psearch-layer">${escapeText(layer.titleEN)}</span>
+          <span class="psearch-time">${planFormatMinutes(mins)}</span>
+        </div>`;
+    }).join('');
+    results.style.display = '';
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      results.innerHTML = ''; results.style.display = 'none'; input.value = '';
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('mousedown', e => {
+    if (!results.contains(e.target) && e.target !== input) {
+      results.style.display = 'none';
+    }
+  });
+}
+
+function plannerSearchSelect(locId, layerId, event) {
+  const layer = ALMANAC.getLayer(layerId);
+  const loc = layer.locations.find(l => l.id === locId);
+  if (!loc) return;
+  const results = document.getElementById('planner-search-results');
+  if (results) { results.style.display = 'none'; }
+  const input = document.getElementById('planner-search-input');
+  if (input) input.value = '';
+  const alreadyIn = planIsInPlan(locId);
+  // Anchor the day picker to the search input
+  openDayPicker(loc, layer, alreadyIn, document.getElementById('planner-search-input') || event.currentTarget);
+}
+
+// ── Custom item modal ─────────────────────────────────────────────────────
+function openCustomItemModal(defaultDay) {
+  const plan = planGet();
+  const modal = document.getElementById('custom-item-modal');
+  if (!modal) return;
+
+  // Populate day selector
+  const daySelect = document.getElementById('ci-day');
+  daySelect.innerHTML = plan.days
+    .filter(d => d.dayNumber > 0)
+    .sort((a, b) => a.dayNumber - b.dayNumber)
+    .map(d => {
+      const label = d.title ? `Day ${d.dayNumber} — ${d.title}` : `Day ${d.dayNumber}`;
+      const sel = d.dayNumber === defaultDay ? ' selected' : '';
+      return `<option value="${d.dayNumber}"${sel}>${label}</option>`;
+    }).join('');
+
+  // Clear fields
+  ['ci-name', 'ci-address', 'ci-maps', 'ci-desc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const mins = document.getElementById('ci-minutes');
+  if (mins) mins.value = '60';
+
+  modal.style.display = '';
+  setTimeout(() => document.getElementById('ci-name').focus(), 50);
+}
+
+function cancelCustomItem() {
+  const modal = document.getElementById('custom-item-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function cancelCustomItemIfBg(e) {
+  if (e.target === document.getElementById('custom-item-modal')) cancelCustomItem();
+}
+
+function parseCustomMapsInput(raw) {
+  raw = (raw || '').trim();
+  if (!raw) return { url: '', coordinates: null };
+
+  // Plain lat,lng like "54.33,18.20"
+  const ll = raw.match(/^(-?\d{1,3}\.?\d*),\s*(-?\d{1,3}\.?\d*)$/);
+  if (ll) {
+    const lat = parseFloat(ll[1]), lng = parseFloat(ll[2]);
+    return { url: `https://www.google.com/maps?q=${lat},${lng}`, coordinates: { lat, lng } };
+  }
+
+  // GMaps URL — try to extract coords from @lat,lng or ?q=lat,lng
+  if (raw.startsWith('http')) {
+    const atMatch = raw.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (atMatch) {
+      return { url: raw, coordinates: { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) } };
+    }
+    try {
+      const u = new URL(raw);
+      const q = u.searchParams.get('q');
+      if (q) {
+        const ql = q.match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
+        if (ql) return { url: raw, coordinates: { lat: parseFloat(ql[1]), lng: parseFloat(ql[2]) } };
+      }
+    } catch (_) {}
+    return { url: raw, coordinates: null };
+  }
+
+  // Plain address text — wrap in a Maps search URL
+  return { url: `https://www.google.com/maps/search/${encodeURIComponent(raw)}`, coordinates: null };
+}
+
+function confirmCustomItem() {
+  const name = (document.getElementById('ci-name').value || '').trim();
+  if (!name) {
+    document.getElementById('ci-name').focus();
+    showPlanToast('Please enter a name', 'warn');
+    return;
+  }
+
+  const minutes     = parseInt(document.getElementById('ci-minutes').value, 10) || 60;
+  const address     = (document.getElementById('ci-address').value || '').trim();
+  const mapsRaw     = (document.getElementById('ci-maps').value || '').trim();
+  const description = (document.getElementById('ci-desc').value || '').trim();
+  const dayNumber   = parseInt(document.getElementById('ci-day').value, 10);
+
+  const { url: googleMapsUrl, coordinates } = parseCustomMapsInput(mapsRaw);
+
+  planAddCustomItem({
+    title: name,
+    estimatedMinutes: minutes,
+    address,
+    googleMapsUrl,
+    coordinates,
+    shortDescription: description
+  }, dayNumber);
+
+  cancelCustomItem();
+  updatePlanBadge();
+  renderPlannerView();
+  showPlanToast(`Added "${name}" to Day ${dayNumber}`);
+}
+
 // Make scrollToLayer and scrollToCard globally accessible (used in onclick attrs)
 window.scrollToLayer = scrollToLayer;
 window.scrollToCard = scrollToCard;
@@ -1329,5 +1760,16 @@ window.changeDayCount = changeDayCount;
 window.removePlannerItem = removePlannerItem;
 window.copyShareLink = copyShareLink;
 window.exportToPDF = exportToPDF;
+window.loadStarterPlan = loadStarterPlan;
+window.togglePlannerLibrary = togglePlannerLibrary;
+window.saveCurrentPlan = saveCurrentPlan;
+window.loadLibraryPlan = loadLibraryPlan;
+window.deleteLibraryPlan = deleteLibraryPlan;
+window.renameLibraryPlan = renameLibraryPlan;
+window.plannerSearchSelect = plannerSearchSelect;
+window.openCustomItemModal = openCustomItemModal;
+window.cancelCustomItem = cancelCustomItem;
+window.cancelCustomItemIfBg = cancelCustomItemIfBg;
+window.confirmCustomItem = confirmCustomItem;
 
 document.addEventListener('DOMContentLoaded', init);

@@ -265,7 +265,7 @@ function planEncodeToUrl(plan) {
     // URL-safe base64: replace +→-, /→_, strip = padding
     const encoded = btoa(unescape(encodeURIComponent(json)))
       .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-    return encoded.length <= 2000 ? encoded : null;
+    return encoded.length <= 12000 ? encoded : null;
   } catch (_) { return null; }
 }
 
@@ -283,4 +283,89 @@ function planLoadShared(sharedPlan) {
   _plan = sharedPlan;
   planSave();
   return true;
+}
+
+// ── Plan Library (saved named plans) ──────────────────────────────────────
+const SAVED_PLANS_KEY = 'almanac-saved-plans';
+const SAVED_PLANS_MAX = 30;
+
+function planGetSaved() {
+  try {
+    const raw = localStorage.getItem(SAVED_PLANS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (_) {}
+  return [];
+}
+
+function planSaveToLibrary(name) {
+  const saved = planGetSaved();
+  if (saved.length >= SAVED_PLANS_MAX) return 'full';
+  const plan = planGet();
+  const entry = {
+    id: 'sp-' + Date.now().toString(36),
+    name: (name || 'My Plan').trim().slice(0, 60),
+    savedAt: new Date().toISOString(),
+    numberOfDays: plan.numberOfDays,
+    itemCount: planGetTotalItemCount(),
+    plan: JSON.parse(JSON.stringify(plan))
+  };
+  saved.push(entry);
+  try {
+    localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(saved));
+    return entry.id;
+  } catch (_) { return null; }
+}
+
+function planLoadFromLibrary(id) {
+  const entry = planGetSaved().find(s => s.id === id);
+  if (!entry || !entry.plan) return false;
+  return planLoadShared(entry.plan);
+}
+
+function planDeleteFromLibrary(id) {
+  const saved = planGetSaved().filter(s => s.id !== id);
+  try {
+    localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(saved));
+    return true;
+  } catch (_) { return false; }
+}
+
+// ── Custom (ad-hoc) items ──────────────────────────────────────────────────
+function planAddCustomItem(fields, dayNumber) {
+  const plan = planGet();
+  const day = plan.days.find(d => d.dayNumber === dayNumber);
+  if (!day) return null;
+
+  const item = {
+    id: planGenerateId(),
+    sourceId: null,
+    title: (fields.title || 'Custom Place').trim(),
+    type: 'custom',
+    estimatedMinutes: Math.max(5, parseInt(fields.estimatedMinutes, 10) || 60),
+    address: (fields.address || '').trim(),
+    coordinates: fields.coordinates || null,
+    googleMapsUrl: (fields.googleMapsUrl || '').trim(),
+    shortDescription: (fields.shortDescription || '').trim(),
+    notes: '',
+    day: dayNumber,
+    order: day.items.length
+  };
+
+  day.items.push(item);
+  planSave();
+  return item;
+}
+
+function planRenameInLibrary(id, newName) {
+  const saved = planGetSaved();
+  const entry = saved.find(s => s.id === id);
+  if (!entry) return false;
+  entry.name = (newName || '').trim().slice(0, 60) || entry.name;
+  try {
+    localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(saved));
+    return true;
+  } catch (_) { return false; }
 }
