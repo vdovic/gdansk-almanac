@@ -686,6 +686,19 @@ function initRouting() {
   function handleHash() {
     const hash = window.location.hash;
     if (hash === '#planner' || hash.startsWith('#planner?')) {
+      // Decode and load a shared plan if present
+      if (hash.startsWith('#planner?')) {
+        const params = new URLSearchParams(hash.slice('#planner?'.length));
+        const encoded = params.get('plan');
+        if (encoded) {
+          const shared = planDecodeFromUrl(encoded);
+          if (shared) {
+            planLoadShared(shared);
+            // Clean URL so refreshing doesn't re-import the same plan
+            history.replaceState(null, '', '#planner');
+          }
+        }
+      }
       showPlannerView();
     } else {
       showAlmanacView();
@@ -693,6 +706,32 @@ function initRouting() {
   }
   window.addEventListener('hashchange', handleHash);
   handleHash();
+}
+
+function copyShareLink() {
+  const encoded = planEncodeToUrl();
+  if (!encoded) {
+    showPlanToast('Plan too large for a URL — use PDF export to share', 'warn');
+    return;
+  }
+  const url = window.location.origin + window.location.pathname + '#planner?plan=' + encoded;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showPlanToast('Link copied to clipboard'))
+      .catch(() => fallbackCopyLink(url));
+  } else {
+    fallbackCopyLink(url);
+  }
+}
+
+function fallbackCopyLink(url) {
+  const input = document.createElement('input');
+  input.value = url;
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand('copy');
+  document.body.removeChild(input);
+  showPlanToast('Link copied to clipboard');
 }
 
 function showPlannerView() {
@@ -759,6 +798,7 @@ function renderPlannerView() {
       <div class="planner-controls">
         <span class="planner-days-label">Days:</span>
         <div class="planner-day-btns">${dayBtnsHTML}</div>
+        <button class="planner-share-btn" onclick="copyShareLink()">Share link</button>
         <button class="planner-back-btn" onclick="location.hash=''">← Almanac</button>
       </div>
     </div>
@@ -1073,5 +1113,6 @@ window.addToPlan = addToPlan;
 window.confirmAddToDay = confirmAddToDay;
 window.changeDayCount = changeDayCount;
 window.removePlannerItem = removePlannerItem;
+window.copyShareLink = copyShareLink;
 
 document.addEventListener('DOMContentLoaded', init);

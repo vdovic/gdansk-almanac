@@ -257,11 +257,11 @@ Layer 15 figures with concrete visitable locations:
 - [ ] Touch-friendly (pointer events or a lightweight lib like SortableJS via CDN)
 - [ ] localStorage syncs on every drag end
 
-### Phase 6 — Shareable Link
-- [ ] Encode plan to `#planner?plan=BASE64`
-- [ ] Decode on load and restore plan
-- [ ] "Copy shareable link" button
-- [ ] Handle oversized plans gracefully
+### Phase 6 — Shareable Link ✅ DONE
+- [x] Encode plan to `#planner?plan=BASE64` (URL-safe base64url)
+- [x] Decode on load and restore plan (`planLoadShared`, URL cleaned with replaceState)
+- [x] "Share link" button in planner header
+- [x] Handle oversized plans gracefully (toast: "Plan too large for a URL — use PDF export")
 
 ### Phase 7 — PDF Export
 - [ ] Add jsPDF via CDN

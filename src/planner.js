@@ -258,17 +258,29 @@ function planFormatMinutes(minutes) {
   return m ? `${h} h ${m} min` : `${h} h`;
 }
 
-// ── URL encode / decode (Phase 6) ──────────────────────────────────────────
+// ── URL encode / decode ────────────────────────────────────────────────────
 function planEncodeToUrl(plan) {
   try {
     const json = JSON.stringify(plan || planGet());
-    const encoded = btoa(unescape(encodeURIComponent(json)));
+    // URL-safe base64: replace +→-, /→_, strip = padding
+    const encoded = btoa(unescape(encodeURIComponent(json)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     return encoded.length <= 2000 ? encoded : null;
   } catch (_) { return null; }
 }
 
 function planDecodeFromUrl(encoded) {
   try {
-    return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    // Restore standard base64 from URL-safe base64
+    const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '=='.slice(0, (4 - b64.length % 4) % 4);
+    return JSON.parse(decodeURIComponent(escape(atob(padded))));
   } catch (_) { return null; }
+}
+
+function planLoadShared(sharedPlan) {
+  if (!sharedPlan || !Array.isArray(sharedPlan.days)) return false;
+  _plan = sharedPlan;
+  planSave();
+  return true;
 }
