@@ -30,6 +30,7 @@
   </div>
 
   <div class="header-actions">
+    <a id="planner-badge" href="#planner" class="planner-badge-link" title="View your visit plan">Plan <span id="plan-count">0</span></a>
     <button id="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">🌙</button>
     <a href="https://claude-code-gdansk-experiment.vercel.app" target="_blank" rel="noopener" class="church-map-link">← Church Map</a>
   </div>
@@ -101,6 +102,10 @@
     </div>
   </main>
 </div>
+
+<!-- Day picker & toast -->
+<div id="day-picker-popup" class="day-picker-popup" role="menu" aria-label="Pick a day"></div>
+<div id="plan-toast" class="plan-toast" role="status" aria-live="polite"></div>
 
 <!-- Leaflet -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>

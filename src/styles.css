@@ -1409,3 +1409,168 @@ body {
   70% { box-shadow: 0 0 0 12px rgba(230, 126, 34, 0); }
   100% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0); }
 }
+
+/* ── PLANNER BADGE (header) ── */
+.planner-badge-link {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.planner-badge-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+#plan-count {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ── ADD-TO-PLAN BUTTON (card) ── */
+.add-to-plan-btn {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.add-to-plan-btn:hover {
+  background: rgba(230, 126, 34, 0.1);
+  border-color: var(--accent);
+}
+
+.add-to-plan-btn.in-plan {
+  color: var(--text-muted);
+}
+
+.add-to-plan-btn.atp-invisible {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.add-to-plan-btn.atp-invisible:hover {
+  background: rgba(0,0,0,0.05);
+  border-color: var(--border);
+}
+
+/* ── DAY PICKER POPUP ── */
+.day-picker-popup {
+  position: fixed;
+  z-index: 9000;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  padding: 8px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 130px;
+}
+
+.day-picker-popup.visible {
+  display: flex;
+}
+
+.day-picker-header {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 2px 6px 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
+.day-picker-warn {
+  color: #c0842a;
+}
+
+.day-picker-day {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.day-picker-day:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── PLAN TOAST ── */
+.plan-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  z-index: 9100;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 20px;
+  color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  white-space: nowrap;
+}
+
+.plan-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.plan-toast::before {
+  content: '✓ ';
+  color: #4caf50;
+  font-weight: 700;
+}
+
+.plan-toast.warn::before {
+  content: '⚠ ';
+  color: #c0842a;
+}

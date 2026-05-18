@@ -212,6 +212,7 @@ function renderStandardCard(loc, layer) {
       <div class="location-narrative">${narrativeHTML}</div>
       <div class="card-actions">
         ${crossRefsHTML}
+        ${renderAddToPlanBtn(loc, layer)}
         <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
       </div>
     </div>`;
@@ -247,6 +248,7 @@ function renderInvisibleCards(layer) {
           </div>
         </div>
         <div class="card-actions">
+          ${renderAddToPlanBtn(loc, layer)}
           <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
         </div>
       </div>`;
@@ -267,6 +269,7 @@ function renderFigureCards(layer) {
         <div class="location-narrative">${narrativeHTML}</div>
         <div class="figure-location-note">📍 ${loc.locationNote}</div>
         <div class="card-actions">
+          ${renderAddToPlanBtn(loc, layer)}
           <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
         </div>
       </div>`;
@@ -288,6 +291,7 @@ function renderRecordCards(layer) {
         ${factsHTML ? `<div class="fact-pills" style="justify-content:center">${factsHTML}</div>` : ''}
         <div class="location-narrative" style="text-align:left;margin-top:14px">${narrativeHTML}</div>
         <div class="card-actions">
+          ${renderAddToPlanBtn(loc, layer)}
           <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
         </div>
       </div>`;
@@ -677,6 +681,91 @@ function initScrollObserver() {
   });
 }
 
+// ── Planner: card button helpers ──────────────────────────────────────────
+function isPlanEligible(loc, layer) {
+  // All layers eligible; for figures (15) require coordinates
+  if (layer.id === '15') return !!(loc.lat && loc.lng);
+  return true;
+}
+
+function renderAddToPlanBtn(loc, layer) {
+  if (!isPlanEligible(loc, layer)) return '';
+  const invisible = layer.id === '12';
+  const cls = invisible ? 'add-to-plan-btn atp-invisible' : 'add-to-plan-btn';
+  const title = invisible
+    ? 'Add to plan (historical interest — nothing visible on site)'
+    : 'Add to visit plan';
+  return `<button class="${cls}" onclick="addToPlan('${loc.id}','${layer.id}',event)" title="${title}">+ Plan</button>`;
+}
+
+// ── Planner: day picker interaction ───────────────────────────────────────
+function addToPlan(locId, layerId, event) {
+  event.stopPropagation();
+  closeDayPicker();
+
+  const layer = ALMANAC.getLayer(layerId);
+  const loc = layer.locations.find(l => l.id === locId);
+  const alreadyIn = planIsInPlan(locId);
+
+  openDayPicker(loc, layer, alreadyIn, event.currentTarget);
+}
+
+function openDayPicker(loc, layer, alreadyIn, anchorEl) {
+  const plan = planGet();
+  const popup = document.getElementById('day-picker-popup');
+
+  const warnHTML = alreadyIn
+    ? `<span class="day-picker-warn">Already in plan — add again?</span>`
+    : 'Add to day';
+
+  let daysHTML = '';
+  for (let d = 1; d <= plan.numberOfDays; d++) {
+    daysHTML += `<button class="day-picker-day" onclick="confirmAddToDay('${loc.id}','${layer.id}',${d})">Day ${d}</button>`;
+  }
+
+  popup.innerHTML = `<div class="day-picker-header">${warnHTML}</div>${daysHTML}`;
+
+  const rect = anchorEl.getBoundingClientRect();
+  let left = rect.left;
+  const popupWidth = 140;
+  if (left + popupWidth > window.innerWidth - 8) {
+    left = window.innerWidth - popupWidth - 8;
+  }
+  popup.style.top = (rect.bottom + 6) + 'px';
+  popup.style.left = left + 'px';
+  popup.classList.add('visible');
+
+  setTimeout(() => document.addEventListener('click', closeDayPicker, { once: true }), 0);
+}
+
+function confirmAddToDay(locId, layerId, dayNumber) {
+  const layer = ALMANAC.getLayer(layerId);
+  const loc = layer.locations.find(l => l.id === locId);
+  planAddItem(loc, layer, dayNumber);
+  updatePlanBadge();
+  closeDayPicker();
+  showPlanToast(`Added to Day ${dayNumber}`);
+}
+
+function closeDayPicker() {
+  document.getElementById('day-picker-popup').classList.remove('visible');
+}
+
+// ── Planner: toast ────────────────────────────────────────────────────────
+function showPlanToast(message, type) {
+  const toast = document.getElementById('plan-toast');
+  toast.textContent = message;
+  toast.className = 'plan-toast visible' + (type ? ' ' + type : '');
+  clearTimeout(toast._tid);
+  toast._tid = setTimeout(() => toast.classList.remove('visible'), 2500);
+}
+
+// ── Planner: header badge ─────────────────────────────────────────────────
+function updatePlanBadge() {
+  const count = planGetTotalItemCount();
+  document.getElementById('plan-count').textContent = count;
+}
+
 // ── Utilities ─────────────────────────────────────────────────────────────
 function toRoman(n) {
   const map = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
@@ -694,6 +783,8 @@ function init() {
   renderLayers();
   renderClosing();
 
+  updatePlanBadge();
+
   // Init maps after DOM is painted
   requestAnimationFrame(() => {
     initMasterMap();
@@ -707,5 +798,7 @@ function init() {
 window.scrollToLayer = scrollToLayer;
 window.scrollToCard = scrollToCard;
 window.showOnMap = showOnMap;
+window.addToPlan = addToPlan;
+window.confirmAddToDay = confirmAddToDay;
 
 document.addEventListener('DOMContentLoaded', init);
