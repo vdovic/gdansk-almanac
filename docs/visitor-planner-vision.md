@@ -223,18 +223,17 @@ Layer 15 figures with concrete visitable locations:
 
 ## 6. Phased Implementation Plan
 
-### Phase 1 — Documentation and Cleanup ✅ IN PROGRESS
+### Phase 1 — Documentation and Cleanup ✅ DONE
 - [x] Create `docs/visitor-planner-vision.md`
-- [ ] Remove visible Part I / Part II / Part III filter from sidebar and map controls
-- [ ] Verify remaining filters (search, map) still work
-- [ ] No other layout changes
+- [x] Remove visible Part I / Part II / Part III filter from sidebar and map controls
+- [x] Verify remaining filters (search, map) still work
+- [x] No other layout changes
 
-### Phase 2 — Planner Data Model and Local Storage
-- [ ] Create `src/planner.js` with state management utilities
-- [ ] Add `localStorage` read/write for `almanac-visitor-plan`
-- [ ] Add day count selector (1–7) in planner view
-- [ ] Define plan schema and validation helpers
-- [ ] Add `estimatedMinutes` defaults per location type
+### Phase 2 — Planner Data Model and Local Storage ✅ DONE
+- [x] Create `src/planner.js` with state management utilities
+- [x] Add `localStorage` read/write for `almanac-visitor-plan`
+- [x] Define plan schema and validation helpers
+- [x] Add `estimatedMinutes` defaults per location type (by layer)
 
 ### Phase 3 — Add-to-Day Buttons
 - [ ] Add "Add to Plan" button on each eligible location card
