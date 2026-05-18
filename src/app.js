@@ -778,6 +778,8 @@ function renderPlannerView() {
   view.querySelectorAll('.planner-day-title-input').forEach(inp => {
     inp.addEventListener('blur', () => planUpdateDay(+inp.dataset.dayNumber, { title: inp.value }));
   });
+
+  initPlannerSortable();
 }
 
 function renderPlannerDay(day) {
@@ -792,13 +794,8 @@ function renderPlannerDay(day) {
     : `<div class="planner-day-load load-comfortable"><span class="load-time">Empty</span></div>`;
 
   const sortedItems = [...day.items].sort((a, b) => (a.order || 0) - (b.order || 0));
-
-  const itemsHTML = sortedItems.length > 0
-    ? sortedItems.map((item, idx) => renderPlannerItem(item, idx + 1)).join('')
-    : `<div class="planner-day-empty">
-        <div class="planner-day-empty-icon">○</div>
-        <div>No places yet.<br>Tap <strong>+ Plan</strong> on any card.</div>
-       </div>`;
+  const isEmpty = sortedItems.length === 0;
+  const itemsHTML = sortedItems.map((item, idx) => renderPlannerItem(item, idx + 1)).join('');
 
   return `
     <div class="planner-day" data-day="${day.dayNumber}">
@@ -809,6 +806,10 @@ function renderPlannerDay(day) {
         ${loadHTML}
       </div>
       <div class="planner-day-items">${itemsHTML}</div>
+      <div class="planner-day-empty"${isEmpty ? '' : ' style="display:none"'}>
+        <div class="planner-day-empty-icon">○</div>
+        <div>No places yet.<br>Tap <strong>+ Plan</strong> on any card.</div>
+      </div>
       <div class="planner-day-footer">
         <textarea class="planner-day-notes" data-day-number="${day.dayNumber}"
                   rows="2" placeholder="Day notes…">${escapeText(day.notes)}</textarea>
@@ -825,6 +826,7 @@ function renderPlannerItem(item, num) {
   return `
     <div class="planner-item" data-item-id="${item.id}">
       <div class="planner-item-main">
+        <div class="planner-item-drag-handle" title="Drag to reorder">⠿</div>
         ${numBadge}
         <div class="planner-item-body">
           <div class="planner-item-name">${item.title}</div>
@@ -852,6 +854,93 @@ function removePlannerItem(itemId) {
   planRemoveItem(itemId);
   updatePlanBadge();
   renderPlannerView();
+}
+
+// ── Drag-and-drop (SortableJS) ────────────────────────────────────────────
+function initPlannerSortable() {
+  if (typeof Sortable === 'undefined') return;
+
+  document.querySelectorAll('.planner-day-items').forEach(container => {
+    Sortable.create(container, {
+      group: 'planner-items',
+      handle: '.planner-item-drag-handle',
+      animation: 150,
+      ghostClass: 'planner-item-ghost',
+      dragClass: 'planner-item-dragging',
+      onEnd: syncPlanFromDOM
+    });
+  });
+}
+
+function syncPlanFromDOM() {
+  const plan = planGet();
+
+  // Build a flat lookup of all items by id
+  const allItems = {};
+  for (const day of plan.days) {
+    for (const item of day.items) allItems[item.id] = item;
+  }
+
+  // Clear items from all days, reassign from DOM order
+  for (const day of plan.days) day.items = [];
+
+  document.querySelectorAll('.planner-day').forEach(dayEl => {
+    const dayNumber = parseInt(dayEl.dataset.day);
+    const day = plan.days.find(d => d.dayNumber === dayNumber);
+    if (!day) return;
+
+    dayEl.querySelectorAll('.planner-item').forEach((itemEl, idx) => {
+      const item = allItems[itemEl.dataset.itemId];
+      if (!item) return;
+      item.day   = dayNumber;
+      item.order = idx;
+      day.items.push(item);
+    });
+  });
+
+  planSave();
+  updateAfterDrag();
+}
+
+function updateAfterDrag() {
+  document.querySelectorAll('.planner-day').forEach(dayEl => {
+    const dayNumber = parseInt(dayEl.dataset.day);
+
+    // Update item numbers
+    dayEl.querySelectorAll('.planner-item').forEach((itemEl, idx) => {
+      const numEl = itemEl.querySelector('.planner-item-num');
+      if (numEl) numEl.textContent = idx + 1;
+    });
+
+    // Show/hide empty state
+    const hasItems = dayEl.querySelectorAll('.planner-item').length > 0;
+    const emptyEl  = dayEl.querySelector('.planner-day-empty');
+    if (emptyEl) emptyEl.style.display = hasItems ? 'none' : '';
+
+    // Update load indicator
+    const minutes = planGetDayMinutes(dayNumber);
+    const status  = planGetLoadStatus(minutes);
+    const loadEl  = dayEl.querySelector('.planner-day-load');
+    if (loadEl) {
+      loadEl.className = `planner-day-load load-${status}`;
+      const timeEl  = loadEl.querySelector('.load-time');
+      const labelEl = loadEl.querySelector('.load-label');
+      if (timeEl)  timeEl.textContent  = minutes > 0 ? planFormatMinutes(minutes) : 'Empty';
+      if (labelEl) labelEl.textContent = status;
+    }
+  });
+
+  // Update page subtitle
+  const plan = planGet();
+  const total = planGetTotalItemCount();
+  const sub = document.querySelector('.planner-subtitle');
+  if (sub) {
+    const itemWord = total === 1 ? 'place' : 'places';
+    const dayWord  = plan.numberOfDays === 1 ? 'day' : 'days';
+    sub.textContent = total === 0
+      ? 'Browse the Almanac and tap + Plan on any card to start.'
+      : `${total} ${itemWord} planned across ${plan.numberOfDays} ${dayWord}`;
+  }
 }
 
 function escapeAttr(s) {

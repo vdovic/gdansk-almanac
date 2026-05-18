@@ -1753,6 +1753,43 @@ body {
   font-style: italic;
 }
 
+/* ── DRAG HANDLE ── */
+.planner-item-drag-handle {
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: grab;
+  opacity: 0.3;
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding-top: 2px;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+
+.planner-item:hover .planner-item-drag-handle {
+  opacity: 0.7;
+}
+
+.planner-item-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* SortableJS states */
+.planner-item-ghost {
+  opacity: 0.35;
+  background: var(--bg-secondary);
+}
+
+.planner-item-dragging {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+  transform: rotate(0.8deg);
+  opacity: 0.95;
+}
+
+.planner-day-items {
+  min-height: 48px;
+}
+
 /* ── DAY EMPTY STATE ── */
 .planner-day-empty {
   padding: 28px 14px;
