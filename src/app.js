@@ -586,29 +586,7 @@ function applyFilters() {
   filterMapByPart(activeMapPart);
 }
 
-// Filter part buttons (sidebar)
-document.querySelectorAll('[data-part]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-part]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const part = btn.dataset.part;
-    if (part === 'all') {
-      state.activeLayers = new Set(ALMANAC.layers.map(l => l.id));
-    } else {
-      const partLayers = ALMANAC.parts.find(p => String(p.id) === part)?.layers || [];
-      state.activeLayers = new Set(partLayers);
-    }
-    applyFilters();
-  });
-});
-
-document.getElementById('filter-clear').addEventListener('click', () => {
-  state.activeLayers = new Set(ALMANAC.layers.map(l => l.id));
-  document.querySelectorAll('[data-part]').forEach(b => b.classList.remove('active'));
-  document.querySelector('[data-part="all"]').classList.add('active');
-  applyFilters();
-});
+// (Part filter buttons removed — see docs/visitor-planner-vision.md Phase 1)
 
 // ── Search ────────────────────────────────────────────────────────────────
 let searchTimeout = null;
