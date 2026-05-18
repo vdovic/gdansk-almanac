@@ -681,6 +681,187 @@ function initScrollObserver() {
   });
 }
 
+// ── Routing ───────────────────────────────────────────────────────────────
+function initRouting() {
+  function handleHash() {
+    const hash = window.location.hash;
+    if (hash === '#planner' || hash.startsWith('#planner?')) {
+      showPlannerView();
+    } else {
+      showAlmanacView();
+    }
+  }
+  window.addEventListener('hashchange', handleHash);
+  handleHash();
+}
+
+function showPlannerView() {
+  document.getElementById('app').classList.add('planner-active');
+  document.getElementById('planner-view').style.display = '';
+  closeDayPicker();
+  renderPlannerView();
+}
+
+function showAlmanacView() {
+  document.getElementById('app').classList.remove('planner-active');
+  document.getElementById('planner-view').style.display = 'none';
+  updatePlanBadge();
+}
+
+// ── Planner page render ────────────────────────────────────────────────────
+function renderPlannerView() {
+  const plan = planGet();
+  const view = document.getElementById('planner-view');
+  const totalItems = planGetTotalItemCount();
+
+  const dayBtnsHTML = Array.from({ length: 7 }, (_, i) => {
+    const n = i + 1;
+    const active = n === plan.numberOfDays ? ' active' : '';
+    return `<button class="planner-day-btn${active}" onclick="changeDayCount(${n})">${n}</button>`;
+  }).join('');
+
+  const itemWord = totalItems === 1 ? 'place' : 'places';
+  const dayWord  = plan.numberOfDays === 1 ? 'day' : 'days';
+  const subtitleText = totalItems === 0
+    ? 'Browse the Almanac and tap + Plan on any card to start.'
+    : `${totalItems} ${itemWord} planned across ${plan.numberOfDays} ${dayWord}`;
+
+  const sortedDays = plan.days
+    .filter(d => d.dayNumber > 0)
+    .sort((a, b) => a.dayNumber - b.dayNumber);
+
+  const daysHTML = sortedDays.map(day => renderPlannerDay(day)).join('');
+
+  const unassignedDay = plan.days.find(d => d.dayNumber === 0);
+  const unassignedHTML = (unassignedDay && unassignedDay.items.length > 0)
+    ? `<div class="planner-unassigned">
+        <div class="planner-unassigned-label">Unassigned (days were reduced)</div>
+        <div class="planner-day-items">${unassignedDay.items.map(i => renderPlannerItem(i)).join('')}</div>
+       </div>`
+    : '';
+
+  const emptyStateHTML = totalItems === 0 ? `
+    <div class="planner-empty-state">
+      <div class="planner-empty-icon">○</div>
+      <p>Your plan is empty.</p>
+      <p>Browse the <a class="planner-almanac-link" href="#" onclick="location.hash=''">Almanac</a>
+         and tap <strong>+ Plan</strong> on any location card to build your itinerary.</p>
+    </div>` : '';
+
+  const colTemplate = `repeat(${plan.numberOfDays}, minmax(0, 1fr))`;
+
+  view.innerHTML = `
+    <div class="planner-page-header">
+      <div class="planner-title-group">
+        <h1 class="planner-title">Your Gdańsk Visit</h1>
+        <p class="planner-subtitle">${subtitleText}</p>
+      </div>
+      <div class="planner-controls">
+        <span class="planner-days-label">Days:</span>
+        <div class="planner-day-btns">${dayBtnsHTML}</div>
+        <button class="planner-back-btn" onclick="location.hash=''">← Almanac</button>
+      </div>
+    </div>
+    <div class="planner-days-wrapper">
+      <div class="planner-days-grid" style="grid-template-columns:${colTemplate}">${daysHTML}</div>
+    </div>
+    ${unassignedHTML}
+    ${emptyStateHTML}`;
+
+  // Wire up notes and title inputs after DOM is ready
+  view.querySelectorAll('.planner-item-notes').forEach(ta => {
+    ta.addEventListener('blur', () => planUpdateItemNotes(ta.dataset.itemId, ta.value));
+  });
+  view.querySelectorAll('.planner-day-notes').forEach(ta => {
+    ta.addEventListener('blur', () => planUpdateDay(+ta.dataset.dayNumber, { notes: ta.value }));
+  });
+  view.querySelectorAll('.planner-day-title-input').forEach(inp => {
+    inp.addEventListener('blur', () => planUpdateDay(+inp.dataset.dayNumber, { title: inp.value }));
+  });
+}
+
+function renderPlannerDay(day) {
+  const minutes = planGetDayMinutes(day.dayNumber);
+  const status  = planGetLoadStatus(minutes);
+
+  const loadHTML = minutes > 0
+    ? `<div class="planner-day-load load-${status}">
+        <span class="load-time">${planFormatMinutes(minutes)}</span>
+        <span class="load-label">${status}</span>
+       </div>`
+    : `<div class="planner-day-load load-comfortable"><span class="load-time">Empty</span></div>`;
+
+  const sortedItems = [...day.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  const itemsHTML = sortedItems.length > 0
+    ? sortedItems.map((item, idx) => renderPlannerItem(item, idx + 1)).join('')
+    : `<div class="planner-day-empty">
+        <div class="planner-day-empty-icon">○</div>
+        <div>No places yet.<br>Tap <strong>+ Plan</strong> on any card.</div>
+       </div>`;
+
+  return `
+    <div class="planner-day" data-day="${day.dayNumber}">
+      <div class="planner-day-head">
+        <div class="planner-day-num">Day ${day.dayNumber}</div>
+        <input class="planner-day-title-input" data-day-number="${day.dayNumber}"
+               value="${escapeAttr(day.title)}" placeholder="Add a title…">
+        ${loadHTML}
+      </div>
+      <div class="planner-day-items">${itemsHTML}</div>
+      <div class="planner-day-footer">
+        <textarea class="planner-day-notes" data-day-number="${day.dayNumber}"
+                  rows="2" placeholder="Day notes…">${escapeText(day.notes)}</textarea>
+      </div>
+    </div>`;
+}
+
+function renderPlannerItem(item, num) {
+  const numBadge = num != null ? `<span class="planner-item-num">${num}</span>` : '';
+  const mapsLink = item.googleMapsUrl
+    ? `<a class="planner-item-map-link" href="${item.googleMapsUrl}" target="_blank" rel="noopener">↗ Maps</a>`
+    : '';
+
+  return `
+    <div class="planner-item" data-item-id="${item.id}">
+      <div class="planner-item-main">
+        ${numBadge}
+        <div class="planner-item-body">
+          <div class="planner-item-name">${item.title}</div>
+          ${item.shortDescription ? `<div class="planner-item-desc">${item.shortDescription}</div>` : ''}
+          <div class="planner-item-meta">
+            <span class="planner-item-time">${planFormatMinutes(item.estimatedMinutes)}</span>
+            ${mapsLink}
+          </div>
+        </div>
+        <button class="planner-item-remove" onclick="removePlannerItem('${item.id}')" title="Remove">×</button>
+      </div>
+      <textarea class="planner-item-notes" data-item-id="${item.id}"
+                rows="2" placeholder="Notes for this stop…">${escapeText(item.notes)}</textarea>
+    </div>`;
+}
+
+// ── Planner interactions ───────────────────────────────────────────────────
+function changeDayCount(n) {
+  planSetDayCount(n);
+  updatePlanBadge();
+  renderPlannerView();
+}
+
+function removePlannerItem(itemId) {
+  planRemoveItem(itemId);
+  updatePlanBadge();
+  renderPlannerView();
+}
+
+function escapeAttr(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function escapeText(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
 // ── Planner: card button helpers ──────────────────────────────────────────
 function isPlanEligible(loc, layer) {
   // All layers eligible; for figures (15) require coordinates
@@ -791,6 +972,7 @@ function init() {
     // Delay mini maps to avoid layout thrash
     setTimeout(initMiniMaps, 200);
     initScrollObserver();
+    initRouting();
   });
 }
 
@@ -800,5 +982,7 @@ window.scrollToCard = scrollToCard;
 window.showOnMap = showOnMap;
 window.addToPlan = addToPlan;
 window.confirmAddToDay = confirmAddToDay;
+window.changeDayCount = changeDayCount;
+window.removePlannerItem = removePlannerItem;
 
 document.addEventListener('DOMContentLoaded', init);
