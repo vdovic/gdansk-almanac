@@ -1135,17 +1135,22 @@ function renderPlannerItem(item, num) {
     ? `<a class="planner-item-map-link" href="${item.googleMapsUrl}" target="_blank" rel="noopener">↗ Maps</a>`
     : '';
 
-  const customBadge = item.type === 'custom' ? '<span class="planner-item-custom-badge">custom</span>' : '';
+  const isCustom = item.type === 'custom';
+  const customBadge = isCustom ? '<span class="planner-item-custom-badge">custom</span>' : '';
+  // Custom items use user-entered text (must escape); Almanac items are trusted data (already safe)
+  const titleHTML   = isCustom ? escapeText(item.title)           : item.title;
+  const descHTML    = isCustom ? escapeText(item.shortDescription) : item.shortDescription;
+  const addressHTML = isCustom ? escapeText(item.address)          : (item.address || '');
 
   return `
-    <div class="planner-item${item.type === 'custom' ? ' planner-item-custom' : ''}" data-item-id="${item.id}">
+    <div class="planner-item${isCustom ? ' planner-item-custom' : ''}" data-item-id="${item.id}">
       <div class="planner-item-main">
         <div class="planner-item-drag-handle" title="Drag to reorder">⠿</div>
         ${numBadge}
         <div class="planner-item-body">
-          <div class="planner-item-name">${escapeText(item.title)}${customBadge}</div>
-          ${item.shortDescription ? `<div class="planner-item-desc">${escapeText(item.shortDescription)}</div>` : ''}
-          ${item.address ? `<div class="planner-item-address">${escapeText(item.address)}</div>` : ''}
+          <div class="planner-item-name">${titleHTML}${customBadge}</div>
+          ${descHTML ? `<div class="planner-item-desc">${descHTML}</div>` : ''}
+          ${addressHTML ? `<div class="planner-item-address">${addressHTML}</div>` : ''}
           <div class="planner-item-meta">
             <span class="planner-item-time">${planFormatMinutes(item.estimatedMinutes)}</span>
             ${mapsLink}
