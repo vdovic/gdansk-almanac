@@ -1522,6 +1522,24 @@ body {
   border-color: var(--accent);
 }
 
+.planner-export-btn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.planner-export-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 .planner-share-btn {
   font-family: var(--font-ui);
   font-size: 12px;

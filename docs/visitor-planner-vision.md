@@ -263,12 +263,16 @@ Layer 15 figures with concrete visitable locations:
 - [x] "Share link" button in planner header
 - [x] Handle oversized plans gracefully (toast: "Plan too large for a URL — use PDF export")
 
-### Phase 7 — PDF Export
-- [ ] Add jsPDF via CDN
-- [ ] "Export PDF" button on planner page
-- [ ] Structured output: title, days, items, times, notes, links
-- [ ] Footer with app URL
-- [ ] Test with 1-day and 7-day plans
+### Phase 7 — PDF Export ✅ DONE
+- [x] jsPDF 2.5.1 loaded on-demand (dynamic script injection on first click)
+- [x] "Export PDF" button in planner header (outlined accent style)
+- [x] Title, subtitle (days · places count), per-day sections
+- [x] Per-item: name, estimated time, clickable Google Maps link, description (2 lines), notes
+- [x] Per-day: total time, overload warning, day notes, separator rule
+- [x] Unassigned bucket rendered if present
+- [x] Footer on every page: "Layers of Gdansk · gdansk-almanac.vercel.app"
+- [x] Polish diacritics transliterated (ą→a, ł→l, etc.) for PDF font compatibility
+- [x] Empty plan shows toast instead of generating blank PDF
 
 ### Phase 8 — Refinement
 - [ ] Visual polish: empty states, loading, transitions

@@ -724,6 +724,219 @@ function copyShareLink() {
   }
 }
 
+// ── PDF Export ─────────────────────────────────────────────────────────────
+function exportToPDF() {
+  if (planGetTotalItemCount() === 0) {
+    showPlanToast('Add places to your plan first', 'warn');
+    return;
+  }
+  if (typeof window.jspdf === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onload = generatePDF;
+    script.onerror = () => showPlanToast('Could not load PDF library', 'warn');
+    document.head.appendChild(script);
+    showPlanToast('Preparing PDF…');
+    return;
+  }
+  generatePDF();
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const plan = planGet();
+  const ML = 20, MR = 20, MT = 22;
+  const PW = 210, PH = 297, CW = PW - ML - MR;
+  const FOOTER_Y = PH - 11;
+  let y = MT;
+
+  function addFooter() {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(175, 155, 135);
+    doc.text('Layers of Gdansk  ·  gdansk-almanac.vercel.app', PW / 2, FOOTER_Y, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+  }
+
+  function checkY(needed) {
+    if (y + needed > FOOTER_Y - 6) { addFooter(); doc.addPage(); y = MT; }
+  }
+
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(50, 35, 18);
+  doc.text('Gdansk Visit Plan', ML, y);
+  y += 9;
+
+  const totalItems = planGetTotalItemCount();
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(130, 100, 68);
+  doc.text(`${plan.numberOfDays} day${plan.numberOfDays !== 1 ? 's' : ''}  ·  ${totalItems} place${totalItems !== 1 ? 's' : ''}`, ML, y);
+  y += 7;
+
+  doc.setDrawColor(190, 165, 138);
+  doc.setLineWidth(0.4);
+  doc.line(ML, y, PW - MR, y);
+  y += 9;
+
+  // Days
+  const days = plan.days.filter(d => d.dayNumber > 0).sort((a, b) => a.dayNumber - b.dayNumber);
+
+  for (let di = 0; di < days.length; di++) {
+    const day = days[di];
+    const sortedItems = [...day.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const minutes = planGetDayMinutes(day.dayNumber);
+    const status  = planGetLoadStatus(minutes);
+
+    checkY(26);
+
+    // Day heading
+    const headLabel = day.title
+      ? `Day ${day.dayNumber}  —  ${depolish(day.title)}`
+      : `Day ${day.dayNumber}`;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(55, 40, 18);
+    doc.text(headLabel, ML, y);
+    y += 6;
+
+    if (minutes > 0) {
+      const warn = status === 'overloaded' ? '  [⚠] Overloaded' : status === 'full' ? '  [·] Full day' : '';
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(160, 110, 50);
+      doc.text(planFormatMinutes(minutes) + warn, ML, y);
+      y += 5;
+    }
+
+    doc.setDrawColor(215, 195, 170);
+    doc.setLineWidth(0.2);
+    doc.line(ML, y, PW - MR, y);
+    y += 5;
+
+    if (sortedItems.length === 0) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(170, 150, 130);
+      doc.text('(no places planned for this day)', ML + 4, y);
+      y += 6;
+    }
+
+    for (let ii = 0; ii < sortedItems.length; ii++) {
+      const item = sortedItems[ii];
+      checkY(22);
+
+      // Name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(25, 18, 12);
+      doc.text(`${ii + 1}.  ${depolish(item.title)}`, ML + 2, y);
+      y += 5;
+
+      // Time + Maps link
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(155, 95, 30);
+      const timeText = planFormatMinutes(item.estimatedMinutes);
+      doc.text(timeText, ML + 6, y);
+      if (item.googleMapsUrl) {
+        const sep = '  ·  ';
+        const tx = ML + 6 + doc.getTextWidth(timeText);
+        doc.setTextColor(155, 95, 30);
+        doc.text(sep, tx, y);
+        doc.setTextColor(45, 95, 185);
+        doc.textWithLink('Open in Google Maps', tx + doc.getTextWidth(sep), y, { url: item.googleMapsUrl });
+      }
+      y += 5;
+
+      // Short description (max 2 lines)
+      if (item.shortDescription) {
+        const lines = doc.splitTextToSize(depolish(item.shortDescription), CW - 8).slice(0, 2);
+        checkY(lines.length * 4.5 + 2);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 88, 76);
+        doc.text(lines, ML + 6, y);
+        y += lines.length * 4.5;
+      }
+
+      // Item notes
+      if (item.notes && item.notes.trim()) {
+        const lines = doc.splitTextToSize('Note: ' + depolish(item.notes), CW - 8);
+        checkY(lines.length * 4.5 + 2);
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(9);
+        doc.setTextColor(118, 98, 78);
+        doc.text(lines, ML + 6, y);
+        y += lines.length * 4.5;
+      }
+
+      y += 4;
+    }
+
+    // Day notes
+    if (day.notes && day.notes.trim()) {
+      const lines = doc.splitTextToSize('Day notes: ' + depolish(day.notes), CW);
+      checkY(lines.length * 4.5 + 4);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(110, 90, 70);
+      doc.text(lines, ML, y);
+      y += lines.length * 4.5;
+    }
+
+    // Day separator
+    if (di < days.length - 1) {
+      y += 5;
+      checkY(14);
+      doc.setDrawColor(205, 182, 158);
+      doc.setLineWidth(0.3);
+      doc.line(ML, y, PW - MR, y);
+      y += 8;
+    }
+  }
+
+  // Unassigned bucket
+  const unassigned = plan.days.find(d => d.dayNumber === 0);
+  if (unassigned && unassigned.items.length > 0) {
+    y += 6;
+    checkY(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(100, 84, 68);
+    doc.text('Unassigned Places', ML, y);
+    y += 7;
+    for (const item of unassigned.items) {
+      checkY(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(80, 68, 56);
+      doc.text('•  ' + depolish(item.title), ML + 4, y);
+      y += 5;
+    }
+  }
+
+  addFooter();
+  doc.save('gdansk-visit-plan.pdf');
+  showPlanToast('PDF downloaded');
+}
+
+function depolish(str) {
+  return (str || '')
+    .replace(/ą/g, 'a').replace(/Ą/g, 'A')
+    .replace(/ć/g, 'c').replace(/Ć/g, 'C')
+    .replace(/ę/g, 'e').replace(/Ę/g, 'E')
+    .replace(/ł/g, 'l').replace(/Ł/g, 'L')
+    .replace(/ń/g, 'n').replace(/Ń/g, 'N')
+    .replace(/ó/g, 'o').replace(/Ó/g, 'O')
+    .replace(/ś/g, 's').replace(/Ś/g, 'S')
+    .replace(/ź/g, 'z').replace(/Ź/g, 'Z')
+    .replace(/ż/g, 'z').replace(/Ż/g, 'Z');
+}
+
 function fallbackCopyLink(url) {
   const input = document.createElement('input');
   input.value = url;
@@ -798,6 +1011,7 @@ function renderPlannerView() {
       <div class="planner-controls">
         <span class="planner-days-label">Days:</span>
         <div class="planner-day-btns">${dayBtnsHTML}</div>
+        <button class="planner-export-btn" onclick="exportToPDF()">Export PDF</button>
         <button class="planner-share-btn" onclick="copyShareLink()">Share link</button>
         <button class="planner-back-btn" onclick="location.hash=''">← Almanac</button>
       </div>
@@ -1114,5 +1328,6 @@ window.confirmAddToDay = confirmAddToDay;
 window.changeDayCount = changeDayCount;
 window.removePlannerItem = removePlannerItem;
 window.copyShareLink = copyShareLink;
+window.exportToPDF = exportToPDF;
 
 document.addEventListener('DOMContentLoaded', init);
