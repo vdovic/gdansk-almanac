@@ -1088,7 +1088,7 @@ function renderPlannerView() {
       <div class="planner-controls">
         <span class="planner-days-label">Days:</span>
         <div class="planner-day-btns">${dayBtnsHTML}</div>
-        <button class="planner-recommend-btn" onclick="loadStarterPlan(${plan.numberOfDays})" title="Load curated ${plan.numberOfDays}-day route">★ Route</button>
+        <button class="planner-recommend-btn" onclick="loadStarterPlan(${plan.numberOfDays})" title="Generate a curated ${plan.numberOfDays}-day Gdańsk itinerary">✦ Plan my visit</button>
         <button id="planner-library-btn" class="planner-library-btn${libClass}" onclick="togglePlannerLibrary()">Plans</button>
         <button class="planner-export-btn" onclick="exportToPDF()">Export PDF</button>
         <button class="planner-json-export-btn" onclick="exportPlanJSON()">↓ Export</button>
@@ -1114,6 +1114,26 @@ function renderPlannerView() {
     </div>
     ${unassignedHTML}
     ${emptyStateHTML}
+
+    <div id="route-info-modal" class="route-info-modal" style="display:none" onclick="closeRouteInfoModal(event)">
+      <div class="route-info-box">
+        <div class="route-info-header">
+          <span class="route-info-icon">✦</span>
+          <span id="route-info-title" class="route-info-title">Your Gdańsk route is ready</span>
+        </div>
+        <div class="route-info-body">
+          <p id="route-info-desc"></p>
+          <div class="route-info-tips">
+            <div class="route-info-tip"><span class="tip-icon">⠿</span><span>Drag any stop up or down to reorder it within a day</span></div>
+            <div class="route-info-tip"><span class="tip-icon">→</span><span>Move a stop between days using the drag handle</span></div>
+            <div class="route-info-tip"><span class="tip-icon">＋</span><span>Add more places — tap <strong>+ Plan</strong> on any Almanac card</span></div>
+            <div class="route-info-tip"><span class="tip-icon">✎</span><span>Add your own stops — restaurants, hotels — with <strong>+ Custom place</strong></span></div>
+            <div class="route-info-tip"><span class="tip-icon">✕</span><span>Remove anything that doesn't suit your interests</span></div>
+          </div>
+        </div>
+        <button class="route-info-close" onclick="closeRouteInfoModal()">Start exploring →</button>
+      </div>
+    </div>
 
     <div id="custom-item-modal" class="custom-item-modal" style="display:none" onclick="cancelCustomItemIfBg(event)">
       <div class="custom-item-box">
@@ -1547,13 +1567,22 @@ const STARTER_PLANS = {
   ]
 };
 
+const STARTER_PLAN_THEMES = {
+  1: "A single focused day in the Old Town — the Royal Way, St. Mary's Basilica, the waterfront crane, and the Solidarity story at the European Solidarity Centre.",
+  2: "Day 1 covers the historic core: the Royal Way, Gothic churches, and the Motława waterfront. Day 2 shifts to the 20th century: the WWII Museum, Solidarity sites, and an amber trail.",
+  3: "Three complementary days: Old Town & waterfront on Day 1; war, memory, and Solidarity on Day 2; maritime heritage, natural Gdańsk, and the Oliwa cathedral on Day 3.",
+  4: "Four days moving from centre to periphery — the compact medieval core, then WWII and Solidarity, then maritime and scientific heritage, finishing with Oliwa forest and the coast.",
+  5: "Five thematic days letting you slow down: grand churches and merchant houses, the waterfront and amber district, war and resistance, Solidarity and contemporary memory, then green Oliwa as a calm close.",
+  6: "Six days for a genuinely deep visit — each thematic layer gets its own rhythm, with room for a long lunch, a detour, and an unhurried return to places that stayed with you.",
+  7: "The full week. Every layer of Gdańsk, unhurried. Seven days designed so that each morning has its own focus and each afternoon leaves room to wander."
+};
+
 function loadStarterPlan(n) {
   const dayLists = STARTER_PLANS[n];
   if (!dayLists) return;
   if (planGetTotalItemCount() > 0) {
     if (!confirm(`Replace your current plan with the recommended ${n}-day Gdańsk route?`)) return;
   }
-  // Reset to empty then grow/shrink to n days
   planReset();
   planSetDayCount(n);
   for (let d = 0; d < dayLists.length; d++) {
@@ -1568,7 +1597,23 @@ function loadStarterPlan(n) {
   }
   updatePlanBadge();
   renderPlannerView();
-  showPlanToast(`${n}-day recommended route loaded`);
+  showRouteInfoModal(n);
+}
+
+function showRouteInfoModal(n) {
+  const modal = document.getElementById('route-info-modal');
+  if (!modal) return;
+  const titleEl = document.getElementById('route-info-title');
+  const descEl  = document.getElementById('route-info-desc');
+  if (titleEl) titleEl.textContent = `Your ${n}-day Gdańsk route is ready`;
+  if (descEl)  descEl.textContent  = STARTER_PLAN_THEMES[n] || '';
+  modal.style.display = 'flex';
+}
+
+function closeRouteInfoModal(e) {
+  if (e && e.target !== document.getElementById('route-info-modal') && !e.target.classList.contains('route-info-close')) return;
+  const modal = document.getElementById('route-info-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 // ── Plan Library UI ───────────────────────────────────────────────────────
@@ -1966,6 +2011,7 @@ window.removePlannerItem = removePlannerItem;
 window.copyShareLink = copyShareLink;
 window.exportToPDF = exportToPDF;
 window.loadStarterPlan = loadStarterPlan;
+window.closeRouteInfoModal = closeRouteInfoModal;
 window.togglePlannerLibrary = togglePlannerLibrary;
 window.saveCurrentPlan = saveCurrentPlan;
 window.loadLibraryPlan  = loadLibraryPlan;
