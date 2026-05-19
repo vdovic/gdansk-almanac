@@ -1152,7 +1152,10 @@ function renderPlannerItem(item, num) {
           ${descHTML ? `<div class="planner-item-desc">${descHTML}</div>` : ''}
           ${addressHTML ? `<div class="planner-item-address">${addressHTML}</div>` : ''}
           <div class="planner-item-meta">
-            <span class="planner-item-time">${planFormatMinutes(item.estimatedMinutes)}</span>
+            <input class="planner-item-time-input" type="number" min="5" max="1440" step="5"
+                   value="${item.estimatedMinutes}" data-item-id="${item.id}"
+                   onchange="updateItemDuration(this)" title="Edit duration in minutes">
+            <span class="planner-item-time-unit">min</span>
             ${mapsLink}
           </div>
         </div>
@@ -1174,6 +1177,31 @@ function removePlannerItem(itemId) {
   planRemoveItem(itemId);
   updatePlanBadge();
   renderPlannerView();
+}
+
+function updateItemDuration(inputEl) {
+  const itemId = inputEl.dataset.itemId;
+  const saved = planUpdateItemMinutes(itemId, inputEl.value);
+  if (saved == null) return;
+  inputEl.value = saved; // normalise (clamp) displayed value
+
+  // Find which day this item belongs to and refresh the day load indicator
+  const plan = planGet();
+  for (const day of plan.days) {
+    if (!day.items.some(i => i.id === itemId)) continue;
+    const minutes = planGetDayMinutes(day.dayNumber);
+    const status  = planGetLoadStatus(minutes);
+    const dayEl   = document.querySelector(`.planner-day[data-day="${day.dayNumber}"]`);
+    if (!dayEl) break;
+    const loadEl = dayEl.querySelector('.planner-day-load');
+    if (loadEl) {
+      loadEl.className = `planner-day-load load-${status}`;
+      loadEl.querySelector('.load-time').textContent = minutes > 0 ? planFormatMinutes(minutes) : 'Empty';
+      const labelEl = loadEl.querySelector('.load-label');
+      if (labelEl) labelEl.textContent = status;
+    }
+    break;
+  }
 }
 
 // ── Drag-and-drop (SortableJS) ────────────────────────────────────────────
@@ -1776,5 +1804,6 @@ window.openCustomItemModal = openCustomItemModal;
 window.cancelCustomItem = cancelCustomItem;
 window.cancelCustomItemIfBg = cancelCustomItemIfBg;
 window.confirmCustomItem = confirmCustomItem;
+window.updateItemDuration = updateItemDuration;
 
 document.addEventListener('DOMContentLoaded', init);

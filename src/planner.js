@@ -219,6 +219,19 @@ function planUpdateItemNotes(itemId, notes) {
   return false;
 }
 
+function planUpdateItemMinutes(itemId, minutes) {
+  const plan = planGet();
+  for (const day of plan.days) {
+    const item = day.items.find(i => i.id === itemId);
+    if (item) {
+      item.estimatedMinutes = Math.max(5, Math.min(1440, parseInt(minutes, 10) || item.estimatedMinutes));
+      planSave();
+      return item.estimatedMinutes;
+    }
+  }
+  return null;
+}
+
 function planUpdateDay(dayNumber, fields) {
   const plan = planGet();
   const day = plan.days.find(d => d.dayNumber === dayNumber);

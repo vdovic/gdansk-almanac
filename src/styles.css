@@ -1733,6 +1733,41 @@ body {
   color: var(--accent);
 }
 
+.planner-item-time-input {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--accent);
+  width: 3.5em;
+  text-align: right;
+  padding: 0;
+  outline: none;
+  cursor: text;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.planner-item-time-input::-webkit-inner-spin-button,
+.planner-item-time-input::-webkit-outer-spin-button { opacity: 0; }
+.planner-item-time-input:hover::-webkit-inner-spin-button,
+.planner-item-time-input:hover::-webkit-outer-spin-button,
+.planner-item-time-input:focus::-webkit-inner-spin-button,
+.planner-item-time-input:focus::-webkit-outer-spin-button { opacity: 1; }
+.planner-item-time-input:focus {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+}
+
+.planner-item-time-unit {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
 .planner-item-map-link {
   font-family: var(--font-ui);
   font-size: 11px;
