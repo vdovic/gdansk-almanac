@@ -842,13 +842,14 @@ function generatePDF() {
       doc.setTextColor(155, 95, 30);
       const timeText = planFormatMinutes(item.estimatedMinutes);
       doc.text(timeText, ML + 6, y);
-      if (item.googleMapsUrl) {
+      const pdfMapsUrl = plannerMapsUrl(item);
+      if (pdfMapsUrl) {
         const sep = '  ·  ';
         const tx = ML + 6 + doc.getTextWidth(timeText);
         doc.setTextColor(155, 95, 30);
         doc.text(sep, tx, y);
         doc.setTextColor(45, 95, 185);
-        doc.textWithLink('Open in Google Maps', tx + doc.getTextWidth(sep), y, { url: item.googleMapsUrl });
+        doc.textWithLink('Open in Google Maps', tx + doc.getTextWidth(sep), y, { url: pdfMapsUrl });
       }
       y += 5;
 
@@ -1129,10 +1130,20 @@ function renderPlannerDay(day) {
     </div>`;
 }
 
+function plannerMapsUrl(item) {
+  if (item.type === 'custom') return item.googleMapsUrl || '';
+  if (item.coordinates) {
+    const q = encodeURIComponent(item.title + ' Gdańsk');
+    return `https://www.google.com/maps/search/${q}/@${item.coordinates.lat},${item.coordinates.lng},17z`;
+  }
+  return item.googleMapsUrl || '';
+}
+
 function renderPlannerItem(item, num) {
   const numBadge = num != null ? `<span class="planner-item-num">${num}</span>` : '';
-  const mapsLink = item.googleMapsUrl
-    ? `<a class="planner-item-map-link" href="${item.googleMapsUrl}" target="_blank" rel="noopener">↗ Maps</a>`
+  const mapsUrl  = plannerMapsUrl(item);
+  const mapsLink = mapsUrl
+    ? `<a class="planner-item-map-link" href="${mapsUrl}" target="_blank" rel="noopener">↗ Maps</a>`
     : '';
 
   const isCustom = item.type === 'custom';

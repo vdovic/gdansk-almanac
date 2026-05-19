@@ -60,7 +60,7 @@ function planCreateItem(loc, layer) {
     estimatedMinutes,
     address: loc.address || "",
     coordinates: coords,
-    googleMapsUrl: coords ? `https://www.google.com/maps?q=${coords.lat},${coords.lng}` : "",
+    googleMapsUrl: coords ? `https://www.google.com/maps/search/${encodeURIComponent((loc.nameEN || loc.namePL) + ' Gdańsk')}/@${coords.lat},${coords.lng},17z` : "",
     shortDescription: planFirstSentence(loc.narrative || loc.whatWasHere || ""),
     notes: ""
   };
