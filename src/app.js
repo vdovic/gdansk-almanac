@@ -1181,6 +1181,7 @@ function renderPlannerItem(item, num) {
             ${mapsLink}
           </div>
         </div>
+        ${isCustom ? `<button class="planner-item-edit-custom" onclick="openCustomItemEditModal('${item.id}')" title="Edit this place">✎</button>` : ''}
         <button class="planner-item-remove" onclick="removePlannerItem('${item.id}')" title="Remove">×</button>
       </div>
       <textarea class="planner-item-notes" data-item-id="${item.id}"
@@ -1516,8 +1517,9 @@ function loadStarterPlan(n) {
 }
 
 // ── Plan Library UI ───────────────────────────────────────────────────────
-let _libraryOpen  = false;
-let _editingPlanId = null;
+let _libraryOpen        = false;
+let _editingPlanId      = null;
+let _editingCustomItemId = null;
 
 function togglePlannerLibrary() {
   _libraryOpen = !_libraryOpen;
@@ -1795,7 +1797,37 @@ function openCustomItemModal(defaultDay) {
   setTimeout(() => document.getElementById('ci-name').focus(), 50);
 }
 
+function openCustomItemEditModal(itemId) {
+  const plan = planGet();
+  let found = null;
+  for (const day of plan.days) {
+    found = day.items.find(i => i.id === itemId);
+    if (found) break;
+  }
+  if (!found || found.type !== 'custom') return;
+
+  _editingCustomItemId = itemId;
+  openCustomItemModal(found.day); // populates day selector and clears fields
+
+  // Pre-fill with existing values
+  document.getElementById('ci-name').value    = found.title || '';
+  document.getElementById('ci-minutes').value = found.estimatedMinutes || 60;
+  document.getElementById('ci-address').value = found.address || '';
+  document.getElementById('ci-desc').value    = found.shortDescription || '';
+
+  // Show stored Maps URL in the maps field
+  const mapsField = document.getElementById('ci-maps');
+  if (mapsField) mapsField.value = found.googleMapsUrl || '';
+
+  // Update modal title and button
+  const titleEl = document.querySelector('.custom-item-title');
+  if (titleEl) titleEl.textContent = 'Edit Custom Place';
+  const confirmBtn = document.querySelector('.ci-confirm-btn');
+  if (confirmBtn) confirmBtn.textContent = 'Save changes';
+}
+
 function cancelCustomItem() {
+  _editingCustomItemId = null;
   const modal = document.getElementById('custom-item-modal');
   if (modal) modal.style.display = 'none';
 }
@@ -1852,19 +1884,20 @@ function confirmCustomItem() {
 
   const { url: googleMapsUrl, coordinates } = parseCustomMapsInput(mapsRaw);
 
-  planAddCustomItem({
-    title: name,
-    estimatedMinutes: minutes,
-    address,
-    googleMapsUrl,
-    coordinates,
-    shortDescription: description
-  }, dayNumber);
-
-  cancelCustomItem();
-  updatePlanBadge();
-  renderPlannerView();
-  showPlanToast(`Added "${name}" to Day ${dayNumber}`);
+  if (_editingCustomItemId) {
+    const editId = _editingCustomItemId;
+    planUpdateCustomItem(editId, { title: name, estimatedMinutes: minutes, address, googleMapsUrl, coordinates, shortDescription: description }, dayNumber);
+    cancelCustomItem();
+    updatePlanBadge();
+    renderPlannerView();
+    showPlanToast(`Updated "${name}"`);
+  } else {
+    planAddCustomItem({ title: name, estimatedMinutes: minutes, address, googleMapsUrl, coordinates, shortDescription: description }, dayNumber);
+    cancelCustomItem();
+    updatePlanBadge();
+    renderPlannerView();
+    showPlanToast(`Added "${name}" to Day ${dayNumber}`);
+  }
 }
 
 // Make scrollToLayer and scrollToCard globally accessible (used in onclick attrs)
@@ -1887,7 +1920,8 @@ window.clearEditMode    = clearEditMode;
 window.deleteLibraryPlan = deleteLibraryPlan;
 window.renameLibraryPlan = renameLibraryPlan;
 window.plannerSearchSelect = plannerSearchSelect;
-window.openCustomItemModal = openCustomItemModal;
+window.openCustomItemModal     = openCustomItemModal;
+window.openCustomItemEditModal = openCustomItemEditModal;
 window.cancelCustomItem = cancelCustomItem;
 window.cancelCustomItemIfBg = cancelCustomItemIfBg;
 window.confirmCustomItem = confirmCustomItem;

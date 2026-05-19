@@ -387,6 +387,36 @@ function planUpdateLibraryEntry(id) {
   } catch (_) { return false; }
 }
 
+function planUpdateCustomItem(itemId, fields, targetDayNumber) {
+  const plan = planGet();
+  let foundItem = null, foundDay = null;
+  for (const day of plan.days) {
+    const item = day.items.find(i => i.id === itemId);
+    if (item) { foundItem = item; foundDay = day; break; }
+  }
+  if (!foundItem || foundItem.type !== 'custom') return false;
+
+  foundItem.title            = (fields.title || foundItem.title).trim();
+  foundItem.estimatedMinutes = Math.max(5, parseInt(fields.estimatedMinutes, 10) || foundItem.estimatedMinutes);
+  foundItem.address          = (fields.address ?? foundItem.address).trim();
+  foundItem.coordinates      = fields.coordinates !== undefined ? fields.coordinates : foundItem.coordinates;
+  foundItem.googleMapsUrl    = (fields.googleMapsUrl ?? foundItem.googleMapsUrl).trim();
+  foundItem.shortDescription = (fields.shortDescription ?? foundItem.shortDescription).trim();
+
+  if (targetDayNumber !== undefined && targetDayNumber !== foundDay.dayNumber) {
+    const target = plan.days.find(d => d.dayNumber === targetDayNumber);
+    if (target) {
+      foundDay.items.splice(foundDay.items.indexOf(foundItem), 1);
+      foundDay.items.forEach((it, i) => (it.order = i));
+      foundItem.day   = targetDayNumber;
+      foundItem.order = target.items.length;
+      target.items.push(foundItem);
+    }
+  }
+  planSave();
+  return true;
+}
+
 function planRenameInLibrary(id, newName) {
   const saved = planGetSaved();
   const entry = saved.find(s => s.id === id);
