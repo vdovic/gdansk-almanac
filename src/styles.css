@@ -930,6 +930,21 @@ body {
   color: var(--accent);
 }
 
+.gmaps-card-link {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.gmaps-card-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 /* ── INVISIBLE LAYER (12) GHOST CARDS ── */
 .layer-section[data-layer="12"] .location-card {
   border-color: var(--text-muted);

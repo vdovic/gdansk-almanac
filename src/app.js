@@ -192,6 +192,13 @@ function renderStandardCards(layer) {
   return `<div class="location-grid">${layer.locations.map(loc => renderStandardCard(loc, layer)).join('')}</div>`;
 }
 
+function almanacMapsUrl(loc) {
+  const name = encodeURIComponent((loc.nameEN || loc.namePL) + ' Gdańsk');
+  return loc.lat && loc.lng
+    ? `https://www.google.com/maps/search/${name}/@${loc.lat},${loc.lng},17z`
+    : `https://www.google.com/maps/search/${name}`;
+}
+
 function renderStandardCard(loc, layer) {
   const narrativeHTML = loc.narrative.split('\n\n').map(p => `<p>${p}</p>`).join('');
   const factsHTML = (loc.facts || []).map(f => `<span class="fact-pill">${f}</span>`).join('');
@@ -214,6 +221,7 @@ function renderStandardCard(loc, layer) {
         ${crossRefsHTML}
         ${renderAddToPlanBtn(loc, layer)}
         <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
+        <a class="gmaps-card-link" href="${almanacMapsUrl(loc)}" target="_blank" rel="noopener">↗ Google Maps</a>
       </div>
     </div>`;
 }
@@ -250,6 +258,7 @@ function renderInvisibleCards(layer) {
         <div class="card-actions">
           ${renderAddToPlanBtn(loc, layer)}
           <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
+          <a class="gmaps-card-link" href="${almanacMapsUrl(loc)}" target="_blank" rel="noopener">↗ Google Maps</a>
         </div>
       </div>`;
   }).join('')}</div>`;
@@ -271,6 +280,7 @@ function renderFigureCards(layer) {
         <div class="card-actions">
           ${renderAddToPlanBtn(loc, layer)}
           <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
+          <a class="gmaps-card-link" href="${almanacMapsUrl(loc)}" target="_blank" rel="noopener">↗ Google Maps</a>
         </div>
       </div>`;
   }).join('')}</div>`;
@@ -293,6 +303,7 @@ function renderRecordCards(layer) {
         <div class="card-actions">
           ${renderAddToPlanBtn(loc, layer)}
           <button class="show-on-map-btn" onclick="showOnMap('${loc.id}')">⊙ Map</button>
+          <a class="gmaps-card-link" href="${almanacMapsUrl(loc)}" target="_blank" rel="noopener">↗ Google Maps</a>
         </div>
       </div>`;
   }).join('')}</div>`;

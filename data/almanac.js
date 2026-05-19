@@ -114,7 +114,7 @@ const ALMANAC = {
           narrative: "The Crane is the silhouette of Gdańsk. Two massive brick towers connected by a wooden lifting mechanism jutting over the Motława, built between 1442 and 1444. It served triple duty: loading cargo, installing ship masts — a rare specialisation in medieval Europe — and acting as fortified water gate. Four wooden treadmills, each about 6 metres across and powered by men walking inside them, could lift around two tonnes to eleven metres' height, and twice that with both wheel-sets engaged.\n\nAfter a three-year renovation, the Crane reopened on 30 April 2024 with a new exhibition following Hans Kross, a 17th-century merchant. Six rooms across three floors recreate period interiors while explaining how ships entered port, how cargo was taxed, and how shipbuilding workshops operated.",
           facts: ["BUILT 1442–44", "LIFT 4 T TO 11 M", "REOPENED 2024"],
           crossRefs: [{ layerId: "04", label: "Maritime Gdańsk" }],
-          lat: 54.34810, lng: 18.65710
+          lat: 54.35057, lng: 18.65748
         }
       ]
     },
