@@ -1516,7 +1516,8 @@ function loadStarterPlan(n) {
 }
 
 // ── Plan Library UI ───────────────────────────────────────────────────────
-let _libraryOpen = false;
+let _libraryOpen  = false;
+let _editingPlanId = null;
 
 function togglePlannerLibrary() {
   _libraryOpen = !_libraryOpen;
@@ -1534,24 +1535,29 @@ function renderLibraryPanel() {
   const saved = planGetSaved();
   const count = saved.length;
 
+  const editingEntry = _editingPlanId ? planGetSaved().find(s => s.id === _editingPlanId) : null;
+
   const listHTML = count === 0
     ? '<p class="library-empty">No saved plans yet. Save your current plan above.</p>'
     : saved.map(entry => {
         const date = entry.savedAt
           ? new Date(entry.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
           : '';
-        const days = entry.numberOfDays || '?';
+        const days  = entry.numberOfDays || '?';
         const items = entry.itemCount || 0;
-        const nameAttr = escapeAttr(entry.name);
+        const isEditing = _editingPlanId === entry.id;
         return `
-          <div class="library-item" data-id="${entry.id}">
+          <div class="library-item${isEditing ? ' library-item-editing' : ''}" data-id="${entry.id}">
             <div class="library-item-info">
               <span class="library-item-name" contenteditable="true" data-id="${entry.id}"
                     onblur="renameLibraryPlan('${entry.id}', this)">${escapeText(entry.name)}</span>
-              <span class="library-item-meta">${days}d · ${items} places · ${date}</span>
+              <span class="library-item-meta">${days}d · ${items} places · ${date}${isEditing ? ' · <em>editing</em>' : ''}</span>
             </div>
             <div class="library-item-actions">
-              <button class="library-btn library-load" onclick="loadLibraryPlan('${entry.id}')">Load</button>
+              ${isEditing
+                ? `<button class="library-btn library-update" onclick="updateCurrentPlan()">Update</button>`
+                : `<button class="library-btn library-edit" onclick="editLibraryPlan('${entry.id}')">Edit</button>
+                   <button class="library-btn library-load" onclick="loadLibraryPlan('${entry.id}')">Load</button>`}
               <button class="library-btn library-delete" onclick="deleteLibraryPlan('${entry.id}')">×</button>
             </div>
           </div>`;
@@ -1561,12 +1567,20 @@ function renderLibraryPanel() {
     ? '<p class="library-full-note">Library full (30/30). Delete a plan to save a new one.</p>'
     : `<p class="library-capacity">${count}/30 plans saved</p>`;
 
+  const saveRow = _editingPlanId && editingEntry
+    ? `<div class="library-save-row library-editing-row">
+         <span class="library-editing-label">✎ Editing: <strong>${escapeText(editingEntry.name)}</strong></span>
+         <button class="library-save-btn library-update-btn" onclick="updateCurrentPlan()">Update</button>
+         <button class="library-cancel-btn" onclick="clearEditMode()">Cancel</button>
+       </div>`
+    : `<div class="library-save-row">
+         <input type="text" id="library-name-input" class="library-name-input"
+                placeholder="Name this plan…" maxlength="60">
+         <button class="library-save-btn" onclick="saveCurrentPlan()">Save</button>
+       </div>`;
+
   panel.innerHTML = `
-    <div class="library-save-row">
-      <input type="text" id="library-name-input" class="library-name-input"
-             placeholder="Name this plan…" maxlength="60">
-      <button class="library-save-btn" onclick="saveCurrentPlan()">Save</button>
-    </div>
+    ${saveRow}
     <div class="library-list">${listHTML}</div>
     ${capacityNote}`;
 }
@@ -1602,6 +1616,38 @@ function loadLibraryPlan(id) {
   _libraryOpen = false;
   renderPlannerView();
   showPlanToast(`Loaded: "${entry.name}"`);
+}
+
+function editLibraryPlan(id) {
+  const saved = planGetSaved();
+  const entry = saved.find(s => s.id === id);
+  if (!entry) return;
+  if (planGetTotalItemCount() > 0 && _editingPlanId !== id) {
+    if (!confirm(`Load "${entry.name}" for editing? Unsaved changes to your current plan will be lost.`)) return;
+  }
+  planLoadFromLibrary(id);
+  updatePlanBadge();
+  _editingPlanId = id;
+  renderPlannerView();
+  showPlanToast(`Editing: "${entry.name}"`);
+}
+
+function updateCurrentPlan() {
+  if (!_editingPlanId) return;
+  const saved = planGetSaved();
+  const entry = saved.find(s => s.id === _editingPlanId);
+  if (!entry) { clearEditMode(); return; }
+  if (planUpdateLibraryEntry(_editingPlanId)) {
+    showPlanToast(`Updated: "${entry.name}"`);
+    renderLibraryPanel();
+  } else {
+    showPlanToast('Could not update plan', 'warn');
+  }
+}
+
+function clearEditMode() {
+  _editingPlanId = null;
+  renderLibraryPanel();
 }
 
 function deleteLibraryPlan(id) {
@@ -1818,7 +1864,10 @@ window.exportToPDF = exportToPDF;
 window.loadStarterPlan = loadStarterPlan;
 window.togglePlannerLibrary = togglePlannerLibrary;
 window.saveCurrentPlan = saveCurrentPlan;
-window.loadLibraryPlan = loadLibraryPlan;
+window.loadLibraryPlan  = loadLibraryPlan;
+window.editLibraryPlan  = editLibraryPlan;
+window.updateCurrentPlan = updateCurrentPlan;
+window.clearEditMode    = clearEditMode;
 window.deleteLibraryPlan = deleteLibraryPlan;
 window.renameLibraryPlan = renameLibraryPlan;
 window.plannerSearchSelect = plannerSearchSelect;

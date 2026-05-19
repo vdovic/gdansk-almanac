@@ -372,6 +372,21 @@ function planAddCustomItem(fields, dayNumber) {
   return item;
 }
 
+function planUpdateLibraryEntry(id) {
+  const saved = planGetSaved();
+  const entry = saved.find(s => s.id === id);
+  if (!entry) return false;
+  const plan = planGet();
+  entry.plan = JSON.parse(JSON.stringify(plan));
+  entry.numberOfDays = plan.numberOfDays;
+  entry.itemCount = planGetTotalItemCount();
+  entry.savedAt = new Date().toISOString();
+  try {
+    localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(saved));
+    return true;
+  } catch (_) { return false; }
+}
+
 function planRenameInLibrary(id, newName) {
   const saved = planGetSaved();
   const entry = saved.find(s => s.id === id);
