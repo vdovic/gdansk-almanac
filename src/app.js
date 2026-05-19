@@ -737,6 +737,57 @@ function copyShareLink() {
   }
 }
 
+// ── JSON Export / Import ───────────────────────────────────────────────────
+function exportPlanJSON() {
+  const plan = planGet();
+  if (planGetTotalItemCount() === 0) {
+    showPlanToast('Nothing to export — plan is empty', 'warn');
+    return;
+  }
+  const json = JSON.stringify(plan, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `gdansk-plan-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showPlanToast('Plan exported as JSON file');
+}
+
+function importPlanJSON() {
+  const input = document.createElement('input');
+  input.type  = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (!parsed || !Array.isArray(parsed.days)) {
+          showPlanToast('Invalid plan file', 'warn');
+          return;
+        }
+        const currentCount = planGetTotalItemCount();
+        if (currentCount > 0 && !confirm(`Replace your current plan (${currentCount} place${currentCount !== 1 ? 's' : ''}) with the imported plan?`)) return;
+        planLoadShared(parsed);
+        updatePlanBadge();
+        renderPlannerView();
+        showPlanToast(`Plan imported: ${parsed.numberOfDays} day${parsed.numberOfDays !== 1 ? 's' : ''}`);
+      } catch (_) {
+        showPlanToast('Could not read file — is it a valid plan JSON?', 'warn');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
 // ── PDF Export ─────────────────────────────────────────────────────────────
 function exportToPDF() {
   if (planGetTotalItemCount() === 0) {
@@ -1040,6 +1091,8 @@ function renderPlannerView() {
         <button class="planner-recommend-btn" onclick="loadStarterPlan(${plan.numberOfDays})" title="Load curated ${plan.numberOfDays}-day route">★ Route</button>
         <button id="planner-library-btn" class="planner-library-btn${libClass}" onclick="togglePlannerLibrary()">Plans</button>
         <button class="planner-export-btn" onclick="exportToPDF()">Export PDF</button>
+        <button class="planner-json-export-btn" onclick="exportPlanJSON()">↓ Export</button>
+        <button class="planner-json-import-btn" onclick="importPlanJSON()">↑ Import</button>
         <button class="planner-share-btn" onclick="copyShareLink()">Share link</button>
         <button class="planner-back-btn" onclick="location.hash=''">← Almanac</button>
       </div>

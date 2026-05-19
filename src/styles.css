@@ -1555,6 +1555,26 @@ body {
   color: #fff;
 }
 
+.planner-json-export-btn,
+.planner-json-import-btn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.planner-json-export-btn:hover,
+.planner-json-import-btn:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
 .planner-share-btn {
   font-family: var(--font-ui);
   font-size: 12px;
