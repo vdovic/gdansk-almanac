@@ -49,7 +49,7 @@ function renderSidebar() {
         <a class="sidebar-layer-item" data-layer-id="${layer.id}" href="#layer-${layer.id}" onclick="scrollToLayer('${layer.id}',event)">
           <span class="layer-dot" style="background:${layer.colour}"></span>
           <span class="sidebar-layer-num">${layer.id}</span>
-          <span class="sidebar-layer-name">${layer.titlePL}</span>
+          <span class="sidebar-layer-name">${layer.titleEN}</span>
         </a>`;
     }
   }
@@ -105,8 +105,8 @@ function renderContents() {
       <tr onclick="scrollToLayer('${layer.id}',event)" style="cursor:pointer">
         <td class="contents-num">${layer.id}</td>
         <td class="contents-dot"><span class="contents-dot-inner" style="background:${layer.colour}"></span></td>
-        <td class="contents-pl">${layer.titlePL}</td>
         <td class="contents-en">${layer.titleEN}</td>
+        <td class="contents-pl">${layer.titlePL}</td>
       </tr>`;
   }
   table.innerHTML = html;
@@ -168,8 +168,8 @@ function renderLayerSection(layer) {
              style="--layer-colour:${layer.colour}">
       <div class="layer-header">
         <div class="layer-roman">— ${layer.romanNumeral} —</div>
-        <div class="layer-title-pl">${layer.titlePL}</div>
         <div class="layer-title-en">${layer.titleEN}</div>
+        <div class="layer-title-pl">${layer.titlePL}</div>
         <div class="layer-tagline">${layer.tagline}</div>
       </div>
 
@@ -211,8 +211,8 @@ function renderStandardCard(loc, layer) {
          style="--layer-colour:${layer.colour}">
       ${loc.image ? `<div class="location-thumb-wrap"><img class="location-thumb" src="${loc.image}" alt="${loc.nameEN}" loading="lazy"></div>` : ''}
       <div class="location-card-header">
-        <div class="location-name-pl">${loc.namePL}</div>
         <div class="location-name-en">${loc.nameEN}</div>
+        <div class="location-name-pl">${loc.namePL}</div>
         ${loc.subheading ? `<div class="location-subheading">${loc.subheading}</div>` : ''}
       </div>
       ${factsHTML ? `<div class="fact-pills">${factsHTML}</div>` : ''}
@@ -234,8 +234,8 @@ function renderInvisibleCards(layer) {
         ${loc.image ? `<div class="location-thumb-wrap"><img class="location-thumb" src="${loc.image}" alt="${loc.namePL}" loading="lazy"></div>` : ''}
         <span class="lost-badge">LOST</span>
         <div class="location-card-header">
-          <div class="location-name-pl">${loc.namePL}</div>
           <div class="location-name-en">${loc.nameEN}</div>
+          <div class="location-name-pl">${loc.namePL}</div>
         </div>
         <div class="invisible-section">
           <div>
@@ -272,7 +272,8 @@ function renderFigureCards(layer) {
            style="--layer-colour:${layer.colour}">
         ${loc.image ? `<div class="location-thumb-wrap"><img class="location-thumb" src="${loc.image}" alt="${loc.namePL}" loading="lazy"></div>` : ''}
         <div class="figure-role" style="color:${layer.colour}">${loc.role}</div>
-        <div class="location-name-pl">${loc.namePL}</div>
+        <div class="location-name-en">${loc.nameEN || loc.namePL}</div>
+        <div class="location-name-pl">${loc.namePL !== (loc.nameEN || loc.namePL) ? loc.namePL : ''}</div>
         <div class="figure-dates">${loc.dates}</div>
         <div class="figure-birth-note">${loc.birthNote}</div>
         <div class="location-narrative">${narrativeHTML}</div>
@@ -297,7 +298,8 @@ function renderRecordCards(layer) {
         <div class="record-numeral" style="color:${layer.colour}">${loc.record}</div>
         <div class="record-unit">${loc.recordUnit}</div>
         <div class="record-label">${loc.recordLabel}</div>
-        <div class="location-name-pl">${loc.namePL}</div>
+        <div class="location-name-en">${loc.nameEN || loc.namePL}</div>
+        <div class="location-name-pl">${loc.namePL !== (loc.nameEN || loc.namePL) ? loc.namePL : ''}</div>
         ${factsHTML ? `<div class="fact-pills" style="justify-content:center">${factsHTML}</div>` : ''}
         <div class="location-narrative" style="text-align:left;margin-top:14px">${narrativeHTML}</div>
         <div class="card-actions">
@@ -466,8 +468,8 @@ function addMarker(loc, layer) {
   circleMarker.bindPopup(`
     <div style="min-width:200px;max-width:260px">
       <span class="popup-layer-badge" style="background:${layer.colour}">${layer.titleEN}</span>
-      <div class="popup-name">${loc.namePL}</div>
-      ${loc.nameEN !== loc.namePL ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-style:italic">${loc.nameEN}</div>` : ''}
+      <div class="popup-name">${loc.nameEN || loc.namePL}</div>
+      ${loc.nameEN && loc.nameEN !== loc.namePL ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-style:italic">${loc.namePL}</div>` : ''}
       <div class="popup-excerpt">${firstSentence}</div>
       <a class="popup-link" onclick="scrollToCard('${loc.id}')" href="#loc-${loc.id}">→ Read more</a>
     </div>`, { maxWidth: 280 });
@@ -531,7 +533,7 @@ function initMiniMaps() {
         fillOpacity: 0.9
       }).addTo(map);
 
-      m.bindTooltip(loc.namePL, { sticky: true });
+      m.bindTooltip(loc.nameEN || loc.namePL, { sticky: true });
       m.on('click', () => scrollToCard(loc.id));
     }
 
