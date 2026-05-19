@@ -342,7 +342,7 @@ const ALMANAC = {
           narrative: "Stretch out into the Baltic at Brzeźno Beach and you're walking Gdańsk's most democratic encounter with the open sea. The wooden pier, first built in 1902, has been reconstructed repeatedly after storms, ice, and war. No cranes loading grain, no container ships blocking the horizon — just families walking over gentle waves, fishermen casting lines, locals watching sunset paint the water copper and gold.\n\nBrzeźno developed as Gdańsk's seaside resort in the late 19th century. Unlike Sopot, which catered to aristocracy with grand hotels and casinos, Brzeźno was democratic — smaller pensions, family beaches, a pier for promenading rather than prestige. This is maritime Gdańsk stripped of commerce, reduced to its essential truth.",
           facts: ["ORIGINAL PIER 1902", "136 M TODAY"],
           crossRefs: [],
-          lat: 54.39430, lng: 18.64130
+          lat: 54.41413, lng: 18.62495
         },
         {
           id: "04-5",
