@@ -1549,13 +1549,13 @@ function renderLibraryPanel() {
         return `
           <div class="library-item${isEditing ? ' library-item-editing' : ''}" data-id="${entry.id}">
             <div class="library-item-info">
-              <span class="library-item-name" contenteditable="true" data-id="${entry.id}"
+              <span class="library-item-name" contenteditable="${isEditing ? 'false' : 'true'}" data-id="${entry.id}"
                     onblur="renameLibraryPlan('${entry.id}', this)">${escapeText(entry.name)}</span>
-              <span class="library-item-meta">${days}d · ${items} places · ${date}${isEditing ? ' · <em>editing</em>' : ''}</span>
+              <span class="library-item-meta">${days}d · ${items} places · ${date}</span>
             </div>
             <div class="library-item-actions">
               ${isEditing
-                ? `<button class="library-btn library-update" onclick="updateCurrentPlan()">Update</button>`
+                ? ''
                 : `<button class="library-btn library-edit" onclick="editLibraryPlan('${entry.id}')">Edit</button>
                    <button class="library-btn library-load" onclick="loadLibraryPlan('${entry.id}')">Load</button>`}
               <button class="library-btn library-delete" onclick="deleteLibraryPlan('${entry.id}')">×</button>
@@ -1568,10 +1568,15 @@ function renderLibraryPanel() {
     : `<p class="library-capacity">${count}/30 plans saved</p>`;
 
   const saveRow = _editingPlanId && editingEntry
-    ? `<div class="library-save-row library-editing-row">
-         <span class="library-editing-label">✎ Editing: <strong>${escapeText(editingEntry.name)}</strong></span>
-         <button class="library-save-btn library-update-btn" onclick="updateCurrentPlan()">Update</button>
-         <button class="library-cancel-btn" onclick="clearEditMode()">Cancel</button>
+    ? `<div class="library-save-row library-editing-row" id="library-editing-row">
+         <div class="library-editing-label">
+           <span class="library-editing-icon">✎</span>
+           <span>Editing <strong>${escapeText(editingEntry.name)}</strong> — make changes below, then save.</span>
+         </div>
+         <div class="library-editing-actions">
+           <button class="library-update-btn" onclick="updateCurrentPlan()">Save changes</button>
+           <button class="library-cancel-btn" onclick="clearEditMode()">Done</button>
+         </div>
        </div>`
     : `<div class="library-save-row">
          <input type="text" id="library-name-input" class="library-name-input"
@@ -1637,11 +1642,22 @@ function updateCurrentPlan() {
   const saved = planGetSaved();
   const entry = saved.find(s => s.id === _editingPlanId);
   if (!entry) { clearEditMode(); return; }
-  if (planUpdateLibraryEntry(_editingPlanId)) {
-    showPlanToast(`Updated: "${entry.name}"`);
-    renderLibraryPanel();
+  if (!planUpdateLibraryEntry(_editingPlanId)) {
+    showPlanToast('Could not save changes', 'warn');
+    return;
+  }
+  // Flash the banner to confirm save
+  const row = document.getElementById('library-editing-row');
+  if (row) {
+    row.classList.add('library-editing-row-saved');
+    const label = row.querySelector('.library-editing-label span:last-child');
+    if (label) label.textContent = '✓ Changes saved!';
+    setTimeout(() => {
+      row.classList.remove('library-editing-row-saved');
+      renderLibraryPanel(); // re-render with updated metadata (new item count / date)
+    }, 1800);
   } else {
-    showPlanToast('Could not update plan', 'warn');
+    renderLibraryPanel();
   }
 }
 

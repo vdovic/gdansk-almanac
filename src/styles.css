@@ -2338,37 +2338,45 @@ body {
   color: var(--text);
 }
 
-.library-update {
-  color: #16a34a;
-  border-color: #16a34a;
-  font-weight: 700;
-}
-.library-update:hover {
-  background: #16a34a;
-  color: #fff;
-}
 
 .library-item-editing {
-  background: color-mix(in srgb, #16a34a 6%, var(--bg));
-  border-color: #16a34a;
+  border-left: 3px solid #16a34a;
+  padding-left: 10px;
 }
 
 .library-editing-row {
-  background: color-mix(in srgb, #16a34a 8%, var(--bg));
-  border: 1px solid #16a34a;
+  background: color-mix(in srgb, #16a34a 7%, var(--bg));
+  border: 1px solid #86efac;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+  transition: background 0.3s;
+}
+.library-editing-row-saved {
+  background: color-mix(in srgb, #16a34a 18%, var(--bg));
 }
 
 .library-editing-label {
   font-family: var(--font-ui);
   font-size: 12px;
   color: #15803d;
-  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.4;
+}
+.library-editing-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.library-editing-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .library-update-btn {
@@ -2379,8 +2387,9 @@ body {
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 5px 14px;
+  padding: 6px 16px;
   cursor: pointer;
+  transition: background 0.15s;
 }
 .library-update-btn:hover { background: #15803d; }
 
@@ -2390,7 +2399,7 @@ body {
   background: none;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   cursor: pointer;
   color: var(--text-muted);
 }
