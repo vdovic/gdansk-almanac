@@ -101,7 +101,7 @@ const ALMANAC = {
           narrative: "Gdańsk wasn't just a grain port — it was the grain port, controlling roughly three-quarters of all Baltic grain exports. In 1576 the city literally dug a canal to expand capacity: the New Motława was excavated that year, creating an artificial island where granaries could line both waterfronts.\n\nBy 1643 some 315 granaries stood on this single island, capable of storing vast quantities of grain and servicing more than two hundred ships at a time. The granaries — five or six storeys tall, with names like 'Deo Gloria,' 'Bear Dance,' 'Blue Lamb' — held Polish grain on Gdańsk credit until Amsterdam or London prices justified shipping. Only three survived 1945 intact. Walk the island today and you find luxury hotels in reconstructed shells, but the scale still impresses.",
           facts: ["CANAL CUT 1576", "315 GRANARIES BY 1643"],
           crossRefs: [],
-          lat: 54.34750, lng: 18.65630
+          lat: 54.34606, lng: 18.65759
         },
         {
           id: "01-5",
@@ -144,7 +144,7 @@ const ALMANAC = {
           narrative: "Built between 1343 and 1502, this colossal Gothic structure can accommodate around 25,000 people — far more than the entire population of medieval Gdańsk. Its cubic volume — roughly 155,000 m³ — creates an interior so vast that visitors often feel antlike beneath the vaults.\n\nThe great treasure stands 14 metres high in the northern transept: the astronomical clock, built by Hans Düringer between 1464 and 1470. At noon, mechanical figures spring to life — Adam and Eve ring the bells while Three Kings, Apostles, and Death process in medieval pageantry. For those willing to climb 405 steps, the 78-metre tower rewards with a 360° view across terracotta rooftops to the Baltic.",
           facts: ["1343–1502", "105 M LONG", "CAP. ≈ 25,000"],
           crossRefs: [{ layerId: "16", label: "Gdańsk of Records" }],
-          lat: 54.34990, lng: 18.65160
+          lat: 54.34981, lng: 18.65301
         },
         {
           id: "02-2",
@@ -169,7 +169,7 @@ const ALMANAC = {
           narrative: "Founded between 1227 and 1239, St. Catherine's is Gdańsk's oldest parish church — Gothic brick walls witnessing nearly eight centuries. While St. Mary's served the Main Town merchant elite, St. Catherine's belonged to the craft guilds, brewers, and artisans of the Old Town. The church became particularly associated with the brewer-astronomer Johannes Hevelius, heir to one of the city's wealthiest brewing dynasties, who served as church administrator from 1640.\n\nIts great treasure rings across the rooftops: one of the largest concert carillons in Eastern Europe, transforming the slender 76-metre tower into a musical instrument. Hevelius lies buried beneath the chancel, his tombstone funded by King John III Sobieski. The tower today houses the Museum of Tower Clocks.",
           facts: ["FOUNDED C. 1227–39", "50-BELL CARILLON"],
           crossRefs: [{ layerId: "15", label: "Famous Figures — Hevelius" }],
-          lat: 54.35410, lng: 18.64950
+          lat: 54.35407, lng: 18.65130
         },
         {
           id: "02-4",
@@ -181,7 +181,7 @@ const ALMANAC = {
           narrative: "Built at the crossroads of two vital medieval trade routes, St. Nicholas began in the late 12th century as a Romanesque structure serving merchants and sailors. In 1227 Duke Świętopełk II donated it to the Dominican Order; between 1348 and 1390 they built the present Gothic hall church alongside the original Romanesque building, whose foundations were rediscovered in 2001. Beneath the vaults lies the Piwnica Romańska — a 12th–13th-century vaulted chamber, one of Gdańsk's most atmospheric treasures.\n\nSt. Nicholas is the only church in the historic centre to survive WWII largely intact — a survival variously attributed to Soviet veneration of St. Nicholas or to the parish priest's gift of cellar wine. The five-level high altar (1643), 16th-century choir stalls, 15th-century wall frescoes, and Baroque organ all remain.",
           facts: ["ROMANESQUE C. 1180", "GIVEN TO DOMINICANS 1227"],
           crossRefs: [],
-          lat: 54.35120, lng: 18.65240
+          lat: 54.35223, lng: 18.65212
         },
         {
           id: "02-5",
@@ -249,7 +249,7 @@ const ALMANAC = {
           narrative: "Squeezed between burgher houses on ulica Świętego Ducha, the Royal Chapel looks almost apologetic — and therein lies its story. By the 17th century, Lutheran Gdańsk had pushed Catholics out of St. Mary's, forcing them into cramped quarters. King Jan III Sobieski, grateful for Gdańsk's support against the Ottomans, gifted the city's Catholic minority a proper church. Construction began in 1678 under Tylman van Gameren, with interior work by Andreas Schlüter the Younger. The chapel opened in 1681 — Baroque in a Gothic city, Catholic in a Protestant stronghold.\n\nIt remains the only Baroque building in Main Town. Note the location: tucked between houses, not commanding a square — accommodation rather than conquest, royal authority asserting itself by gift.",
           facts: ["1678–1681", "TYLMAN VAN GAMEREN"],
           crossRefs: [],
-          lat: 54.34990, lng: 18.65230
+          lat: 54.35030, lng: 18.65372
         },
         {
           id: "03-4",
@@ -261,7 +261,7 @@ const ALMANAC = {
           narrative: "Built 1564–1568 to replace the medieval Cog Gate, the Green Gate was conceived as the formal residence for Polish monarchs visiting Gdańsk. Dutch architect Regnier van Amsterdam designed it after the model of Antwerp's City Hall — four elegant storeys with Mannerist gables facing the Motława, marking the ceremonial terminus of the Royal Way.\n\nPolish monarchs visited regularly, parading through the Golden Gate and down the Royal Way — but when night fell they preferred to stay in the Main Town Hall or in merchants' houses, finding this purpose-built palace cold and uncomfortable. Maria Ludwika Gonzaga stayed here briefly in February 1646 en route from France to marry King Władysław IV. The symbolism is perfect: a royal palace at the threshold between Royal Way and Motława — 'we acknowledge your authority, but we both understand where real power lives.'",
           facts: ["1564–1568", "REGNIER VAN AMSTERDAM"],
           crossRefs: [],
-          lat: 54.34840, lng: 18.65480
+          lat: 54.34787, lng: 18.65572
         },
         {
           id: "03-5",
@@ -274,7 +274,7 @@ const ALMANAC = {
           narrative: "Jan III Sobieski (1629–1696) became one of Poland's most celebrated military commanders and kings — distinguished against Ottomans, Tatars, Cossacks, and Swedes. His triumph at Vienna (1683), where he saved Christian Europe from Ottoman conquest, made him the 'Lion of Lechistan.'\n\nThe grateful citizens of Lwów erected this bronze equestrian monument in 1898 — sculptor Tadeusz Barącz, cast in Vienna — showing Sobieski with raised hand beneath his horse's hooves crushing an Ottoman cannon. When Soviets took Lviv in 1945, a Polish king celebrating victory over an eastern enemy didn't fit the new narrative. The monument was 'gifted' to Poland in 1950, sat in Warsaw, and was finally installed in Gdańsk in 1965 — a statue that began in Lwów, was exiled by Soviets, and ended on the Baltic.",
           facts: ["1629–1696", "ERECTED LWÓW 1898", "GDAŃSK 1965"],
           crossRefs: [{ layerId: "03", label: "Royal Chapel" }],
-          lat: 54.35200, lng: 18.64680
+          lat: 54.35209, lng: 18.64848
         }
       ]
     },
@@ -355,7 +355,7 @@ const ALMANAC = {
           narrative: "Spread across historic granaries and waterfront buildings along the Motława, the Maritime Museum tells the story of Gdańsk's relationship with the sea — from medieval Hanseatic ships to modern container vessels. The crown jewel is the SS Sołdek, Poland's first post-WWII oceangoing vessel, launched 1948, permanently moored as a floating exhibit where you walk the decks, explore the engine room, and understand what it meant for a devastated nation to return to the seas.\n\nThe complex occupies Ołowianka Island granaries that once stored Gdańsk's golden-age grain. Inside these brick warehouses you find ship models spanning a millennium, navigation instruments from sextants to early radar, and maritime paintings capturing centuries of Baltic storms. The Crane (Żuraw) technically belongs to this complex too.",
           facts: ["SS SOŁDEK LAUNCHED 1948", "OŁOWIANKA ISLAND"],
           crossRefs: [{ layerId: "01", label: "Commercial — The Crane" }],
-          lat: 54.34760, lng: 18.65620
+          lat: 54.35123, lng: 18.65904
         }
       ]
     },
@@ -397,7 +397,7 @@ const ALMANAC = {
           narrative: "Built at the mouth of the Dead Vistula where river meets Baltic, Wisłoujście is Poland's oldest coastal fortification — a circular citadel besieged, captured, rebuilt and repurposed so many times its architecture reads like a timeline of European military engineering.\n\nThe Teutonic Knights built a wooden watchtower around 1382; burned by Hussite raiders in 1433, rebuilt in brick by 1482. In 1562 Italian engineers surrounded it with 'the Ring' — a three-storey circular battery. In 1608, four corner bastions created overlapping fields of fire. The fortifications were tested by Batory (1577), Swedes (1627), Russians (1734), Napoleon (1807) — each time damaged, each time rebuilt stronger.",
           facts: ["WOODEN TOWER C. 1382", "BRICK 1482", "BASTIONS 1608"],
           crossRefs: [],
-          lat: 54.39770, lng: 18.66140
+          lat: 54.39462, lng: 18.68083
         },
         {
           id: "05-3",
@@ -410,7 +410,7 @@ const ALMANAC = {
           narrative: "Some war museums celebrate victories. This one documents catastrophe. Opened December 2016 across the canal from Westerplatte, its architecture makes brutality visible. The main exhibition is underground — three levels descending into earth, 5,000 square metres, around 2,000 objects.\n\nThe exhibition emphasises civilian experience over military campaigns. Poland's losses — roughly six million dead, including three million Jews — are placed inside a wider European frame: from Versailles to Molotov-Ribbentrop to occupation, ghettos, deportations, extermination camps. Stutthof concentration camp lies just 60 km from Gdańsk; this history isn't abstract.",
           facts: ["OPENED DEC. 2016", "5,000 M² UNDERGROUND"],
           crossRefs: [{ layerId: "05", label: "Westerplatte" }],
-          lat: 54.35930, lng: 18.66520
+          lat: 54.35594, lng: 18.66112
         },
         {
           id: "05-4",
@@ -478,7 +478,7 @@ const ALMANAC = {
           narrative: "Some railway stations are functional. This one is a Neo-Renaissance cathedral to Prussian modernity. Built 1896–1900 by architects Alexander Rüdell and Paul Thoemer, the station was designed to announce that this city — annexed, Germanised, modernised — had arrived. The 48-metre clock tower dominates the approach; elaborate red brick with sandstone decoration, copper-clad turrets, zigzag yellow-and-green ceramic tiles.\n\nMarch 1945: set ablaze during the Soviet assault, the interiors were destroyed while the tower miraculously survived. A 2019–2023 renovation (around 120 million PLN) restored the historical character. Curious fact: the station's design was replicated in Imari, Japan in 1984 as a wedding palace — a Japanese entrepreneur sent an artist to sketch it after Cold-War-era restrictions made photographing rail infrastructure impossible.",
           facts: ["1896–1900", "48 M CLOCK TOWER", "RESTORED 2019–23"],
           crossRefs: [],
-          lat: 54.35660, lng: 18.64280
+          lat: 54.35643, lng: 18.64419
         },
         {
           id: "06-3",
@@ -665,7 +665,7 @@ const ALMANAC = {
           narrative: "When martial law was declared on 13 December 1981, Solidarity went underground — and into St. Bridget's Church. Parish priest Father Henryk Jankowski opened the church as sanctuary for banned union leaders, and for eight years it became Solidarity's spiritual headquarters. Wałęsa, Mazowiecki, and other opposition leaders worshipped within. Masses became political acts; sermons carried coded messages of resistance.\n\nFounded in the 1370s, virtually destroyed in 1945, the church was rebuilt by 1987. Its crowning achievement still being created: the monumental Amber Altar, dedicated in 2017.",
           facts: ["FOUNDED 1370S", "REOPENED 1987", "AMBER ALTAR FROM 2017"],
           crossRefs: [{ layerId: "09", label: "Amber — St. Bridget's Altar" }],
-          lat: 54.35790, lng: 18.64870
+          lat: 54.35459, lng: 18.65225
         },
         {
           id: "08-5",
@@ -716,7 +716,7 @@ const ALMANAC = {
           narrative: "The world's largest sacred amber project rises about eleven metres in St. Bridget's presbytery — a monumental triptych incorporating more than 900 kilograms of amber, still growing toward completion. At its centre: the painting of Our Lady, Protectress of Working People, inspired by the December 1970 massacre. Surrounding it: amber crosses referencing the Monument to Fallen Shipyard Workers, an amber eagle, a contour map of Poland inscribed 'Solidarność', and a 174-cm monstrance crafted from 34 kg of amber by master Mariusz Drapikowski.\n\nThe altar connects Gdańsk's three defining identities: amber (the material), faith (the purpose), and Solidarity (the political context). Dedicated in December 2017 with President Andrzej Duda present, the project remains roughly 50% complete.",
           facts: ["~11 M TALL", "900+ KG AMBER", "DEDICATED 2017"],
           crossRefs: [{ layerId: "08", label: "Solidarity — St. Bridget's" }],
-          lat: 54.35790, lng: 18.64870
+          lat: 54.35459, lng: 18.65225
         },
         {
           id: "09-3",
@@ -1131,7 +1131,7 @@ const ALMANAC = {
           birthNote: "Polish King",
           narrative: "The Polish king who most successfully navigated Gdańsk's stubborn independence, combining military genius with diplomatic subtlety. His 1683 victory at Vienna — leading a vast cavalry charge to break the Ottoman siege — made him a European hero.\n\nDuring his 1677 visit to Gdańsk, Sobieski heard complaints from craftsmen's guilds about merchant domination. Rather than imposing reforms, he negotiated. In 1678 he funded the Royal Chapel beside St. Mary's Basilica — Catholic worship space in a Protestant city, royal patronage without challenging merchant power. Astronomer Hevelius honoured him in 1684 by naming a constellation Scutum Sobiescianum — a Gdańsk scientist commemorating a Polish king by rearranging the stars.",
           locationNote: "Monument: Targ Drzewny — Royal Chapel: beside St. Mary's",
-          lat: 54.35200, lng: 18.64680
+          lat: 54.35209, lng: 18.64848
         },
         {
           id: "15-8",
@@ -1176,7 +1176,7 @@ const ALMANAC = {
           recordLabel: "Largest Concert Carillon in Eastern Europe",
           narrative: "Gdańsk's carillon tradition dates to 1561. The current instrument — the fourth to inhabit St. Catherine's tower — comprises 50 bells from the Royal Eijsbouts foundry (Netherlands), spanning four chromatic octaves.\n\nThe legendary 1738 carillon (35 bells) was destroyed by lightning in 1905; witnesses remembered 'great drops of molten metal' falling from the tower, called 'the bronze tears of St. Catherine.' A 1910 replacement (37 bells) was confiscated by the Nazis in 1942; 28 of those bells survive in Lübeck's St. Mary's Church. The current bells were installed 1989–2006; concerts ring weekly.",
           facts: ["17+ TONNES", "4 CHROMATIC OCTAVES"],
-          lat: 54.35410, lng: 18.64950
+          lat: 54.35407, lng: 18.65130
         },
         {
           id: "16-2",
@@ -1190,7 +1190,7 @@ const ALMANAC = {
           recordLabel: "Europe's Largest Brick Church",
           narrative: "Built between 1343 and 1502 — 159 years of continuous construction — entirely of red brick in Baltic Gothic style. 105 metres long, 66 metres wide at the transept, vaulting reaching 30 metres. Larger by floor area than many stone cathedrals.\n\nBuilt not by kingdom or diocese but by merchant guilds — each responsible for different sections, competing to make their portion most impressive. The 27 columns supporting the rib-vaulted ceiling create a forest effect: entering St. Mary's means experiencing space designed to overwhelm human scale. Destroyed by artillery in March 1945; meticulously reconstructed 1946–1955.",
           facts: ["105 METRES LONG", "4,900 SQUARE METRES"],
-          lat: 54.34990, lng: 18.65160
+          lat: 54.34981, lng: 18.65301
         },
         {
           id: "16-3",
