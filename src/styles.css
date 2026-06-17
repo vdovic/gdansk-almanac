@@ -1470,11 +1470,7 @@ body {
 }
 
 .planner-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   flex-shrink: 0;
-  flex-wrap: wrap;
 }
 
 .planner-days-label {
@@ -2028,7 +2024,11 @@ body {
 
   .planner-controls {
     width: 100%;
-    justify-content: space-between;
+  }
+
+  .planner-controls-primary,
+  .planner-controls-secondary {
+    width: 100%;
   }
 }
 
@@ -2618,6 +2618,202 @@ body {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 2px;
+}
+
+/* ── WELCOME BANNER ── */
+.welcome-banner {
+  background: var(--accent);
+  color: #fff;
+  padding: 14px 16px;
+}
+
+.welcome-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.welcome-banner-text {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.welcome-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.welcome-cta-plan {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff;
+  color: var(--accent);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.welcome-dismiss {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ── PLANNER CONTROLS RESTRUCTURE ── */
+.planner-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.planner-controls-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.planner-controls-secondary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.planner-controls-secondary-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+/* ── OPEN IN ALMANAC LINK ── */
+.planner-item-almanac-link {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+.planner-item-almanac-link:hover { opacity: 1; text-decoration: underline; }
+
+/* ── CARD TIME HINT ── */
+.card-time-hint {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+/* ── IN-PLAN SEARCH TAG ── */
+.psearch-in-plan {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* ── LAYER JUMP LINK ── */
+.layer-jump-link {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: -4px 0 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.12s;
+}
+.layer-jump-link:hover { color: var(--accent); }
+
+/* ── CARD HIGHLIGHT (open in almanac) ── */
+@keyframes cardHighlight {
+  0%   { box-shadow: 0 0 0 3px var(--accent); }
+  70%  { box-shadow: 0 0 0 3px var(--accent); }
+  100% { box-shadow: none; }
+}
+.card-highlight { animation: cardHighlight 1.8s ease-out forwards; }
+
+/* ── EMPTY PLANNER STATE ── */
+.planner-empty-headline {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.planner-empty-desc {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 340px;
+  margin: 0 auto 20px;
+}
+
+.planner-empty-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.planner-empty-cta-primary {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.planner-empty-cta-primary:hover { opacity: 0.88; }
+
+.planner-empty-cta-secondary {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.planner-empty-cta-secondary:hover {
+  background: var(--accent);
+  color: #fff;
 }
 
 /* ── ROUTE INFO MODAL ── */

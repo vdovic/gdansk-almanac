@@ -173,6 +173,7 @@ function renderLayerSection(layer) {
         <div class="layer-tagline">${layer.tagline}</div>
       </div>
 
+      <a class="layer-jump-link" href="#layer-locs-${layer.id}">↓ Jump to places</a>
       <div class="layer-narrative">${narrativeHTML}</div>
       ${churchMapBadge}
 
@@ -184,7 +185,7 @@ function renderLayerSection(layer) {
 
       <div class="layer-mini-map" id="mini-map-${layer.id}"></div>
 
-      ${locationsHTML}
+      <div id="layer-locs-${layer.id}">${locationsHTML}</div>
     </section>`;
 }
 
@@ -448,15 +449,25 @@ function initMasterMap() {
   });
 }
 
+function markerOptions(layer, inPlan) {
+  return inPlan
+    ? { radius: 9, fillColor: layer.colour, color: '#fff', weight: 3, opacity: 1, fillOpacity: 1 }
+    : { radius: 7, fillColor: layer.colour, color: '#fff', weight: 1.5, opacity: 1, fillOpacity: 0.85 };
+}
+
+function refreshPlanMarkers() {
+  for (const [locId, info] of Object.entries(state.markers)) {
+    const inPlan = planIsInPlan(locId);
+    info.marker.setStyle(markerOptions({ colour: info.colour }, inPlan));
+    if (inPlan) {
+      info.marker.bringToFront();
+    }
+  }
+}
+
 function addMarker(loc, layer) {
-  const circleMarker = L.circleMarker([loc.lat, loc.lng], {
-    radius: 7,
-    fillColor: layer.colour,
-    color: '#fff',
-    weight: 1.5,
-    opacity: 1,
-    fillOpacity: 0.85
-  });
+  const inPlan = planIsInPlan(loc.id);
+  const circleMarker = L.circleMarker([loc.lat, loc.lng], markerOptions(layer, inPlan));
 
   const firstSentence = getFirstSentence(getLocNarrative(loc));
 
@@ -474,7 +485,7 @@ function addMarker(loc, layer) {
       <a class="popup-link" onclick="scrollToCard('${loc.id}')" href="#loc-${loc.id}">→ Read more</a>
     </div>`, { maxWidth: 280 });
 
-  state.markers[loc.id] = { marker: circleMarker, layerId: layer.id, part: layer.part };
+  state.markers[loc.id] = { marker: circleMarker, layerId: layer.id, part: layer.part, colour: layer.colour };
   state.clusterGroup.addLayer(circleMarker);
 }
 
@@ -1035,6 +1046,19 @@ function showAlmanacView() {
   updatePlanBadge();
 }
 
+function openInAlmanac(sourceId, e) {
+  if (e) e.preventDefault();
+  showAlmanacView();
+  location.hash = '';
+  requestAnimationFrame(() => {
+    const el = document.getElementById('loc-' + sourceId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('card-highlight');
+    setTimeout(() => el.classList.remove('card-highlight'), 1800);
+  });
+}
+
 // ── Planner page render ────────────────────────────────────────────────────
 function renderPlannerView() {
   const plan = planGet();
@@ -1070,9 +1094,13 @@ function renderPlannerView() {
   const emptyStateHTML = totalItems === 0 ? `
     <div class="planner-empty-state">
       <div class="planner-empty-icon">○</div>
-      <p>Your plan is empty.</p>
-      <p>Browse the <a class="planner-almanac-link" href="#" onclick="location.hash=''">Almanac</a>
-         and tap <strong>+ Plan</strong> on any location card to build your itinerary.</p>
+      <p class="planner-empty-headline">Your plan is empty</p>
+      <p class="planner-empty-desc">This is your personal Gdańsk itinerary. Add places from the Almanac,
+         or let us suggest a complete route for you.</p>
+      <div class="planner-empty-actions">
+        <button class="planner-empty-cta-primary" onclick="loadStarterPlan(${plan.numberOfDays})">✦ Suggest a ${plan.numberOfDays}-day route</button>
+        <button class="planner-empty-cta-secondary" onclick="location.hash=''">Browse the Almanac →</button>
+      </div>
     </div>` : '';
 
   const colTemplate = `repeat(${plan.numberOfDays}, minmax(0, 1fr))`;
@@ -1086,15 +1114,20 @@ function renderPlannerView() {
         <p class="planner-subtitle">${subtitleText}</p>
       </div>
       <div class="planner-controls">
-        <span class="planner-days-label">Days:</span>
-        <div class="planner-day-btns">${dayBtnsHTML}</div>
-        <button class="planner-recommend-btn" onclick="loadStarterPlan(${plan.numberOfDays})" title="Generate a curated ${plan.numberOfDays}-day Gdańsk itinerary">✦ Plan my visit</button>
-        <button id="planner-library-btn" class="planner-library-btn${libClass}" onclick="togglePlannerLibrary()">Plans</button>
-        <button class="planner-export-btn" onclick="exportToPDF()">Export PDF</button>
-        <button class="planner-json-export-btn" onclick="exportPlanJSON()">↓ Export</button>
-        <button class="planner-json-import-btn" onclick="importPlanJSON()">↑ Import</button>
-        <button class="planner-share-btn" onclick="copyShareLink()">Share link</button>
-        <button class="planner-back-btn" onclick="location.hash=''">← Almanac</button>
+        <div class="planner-controls-primary">
+          <span class="planner-days-label">Days:</span>
+          <div class="planner-day-btns">${dayBtnsHTML}</div>
+          <button class="planner-recommend-btn" onclick="loadStarterPlan(${plan.numberOfDays})" title="Generate a curated ${plan.numberOfDays}-day Gdańsk itinerary">✦ Plan my visit</button>
+          <button id="planner-library-btn" class="planner-library-btn${libClass}" onclick="togglePlannerLibrary()">Plans</button>
+          <button class="planner-share-btn" onclick="copyShareLink()">Share link</button>
+          <button class="planner-back-btn" onclick="location.hash=''">← Almanac</button>
+        </div>
+        <div class="planner-controls-secondary">
+          <span class="planner-controls-secondary-label">Export / Import:</span>
+          <button class="planner-export-btn" onclick="exportToPDF()">PDF</button>
+          <button class="planner-json-export-btn" onclick="exportPlanJSON()">↓ JSON</button>
+          <button class="planner-json-import-btn" onclick="importPlanJSON()">↑ JSON</button>
+        </div>
       </div>
     </div>
 
@@ -1180,6 +1213,28 @@ function renderPlannerView() {
   initPlannerSortable();
 }
 
+// Layer themes used to compose day title suggestions
+const DAY_TITLE_THEMES = {
+  '01': 'Merchant Quarter', '02': 'Waterfront & Churches', '03': 'Royal Way',
+  '04': 'Gothic Gdańsk', '05': 'City Walls', '06': 'Science & Innovation',
+  '07': 'WWII Sites', '08': 'Solidarity Quarter', '09': 'Amber Trail',
+  '10': 'Motława Riverside', '11': 'Parks & Coast', '12': 'Hidden History',
+  '13': 'Food & Coffee', '14': 'Cultural Spaces', '15': 'Famous Figures',
+  '16': 'Landmark Records'
+};
+
+function suggestDayTitle(day) {
+  if (!day.items || day.items.length === 0) return 'Add a title…';
+  const layerCounts = {};
+  for (const item of day.items) {
+    const lid = item.sourceId ? item.sourceId.slice(0, 2) : null;
+    if (lid) layerCounts[lid] = (layerCounts[lid] || 0) + 1;
+  }
+  const top = Object.entries(layerCounts).sort((a, b) => b[1] - a[1]).slice(0, 2);
+  if (top.length === 0) return 'Add a title…';
+  return top.map(([lid]) => DAY_TITLE_THEMES[lid] || '').filter(Boolean).join(' & ') || 'Add a title…';
+}
+
 function renderPlannerDay(day) {
   const minutes = planGetDayMinutes(day.dayNumber);
   const status  = planGetLoadStatus(minutes);
@@ -1200,7 +1255,7 @@ function renderPlannerDay(day) {
       <div class="planner-day-head">
         <div class="planner-day-num">Day ${day.dayNumber}</div>
         <input class="planner-day-title-input" data-day-number="${day.dayNumber}"
-               value="${escapeAttr(day.title)}" placeholder="Add a title…">
+               value="${escapeAttr(day.title)}" placeholder="${escapeAttr(suggestDayTitle(day))}">
         ${loadHTML}
       </div>
       <div class="planner-day-items">${itemsHTML}</div>
@@ -1238,6 +1293,9 @@ function renderPlannerItem(item, num) {
   const titleHTML   = isCustom ? escapeText(item.title)           : item.title;
   const descHTML    = isCustom ? escapeText(item.shortDescription) : item.shortDescription;
   const addressHTML = isCustom ? escapeText(item.address)          : (item.address || '');
+  const almanacLink = (!isCustom && item.sourceId)
+    ? `<a class="planner-item-almanac-link" href="#loc-${item.sourceId}" onclick="openInAlmanac('${item.sourceId}',event)">→ Open in Almanac</a>`
+    : '';
 
   return `
     <div class="planner-item${isCustom ? ' planner-item-custom' : ''}" data-item-id="${item.id}">
@@ -1254,6 +1312,7 @@ function renderPlannerItem(item, num) {
                    onchange="updateItemDuration(this)" title="Edit duration in minutes">
             <span class="planner-item-time-unit">min</span>
             ${mapsLink}
+            ${almanacLink}
           </div>
         </div>
         ${isCustom ? `<button class="planner-item-edit-custom" onclick="openCustomItemEditModal('${item.id}')" title="Edit this place">✎</button>` : ''}
@@ -1274,6 +1333,7 @@ function changeDayCount(n) {
 function removePlannerItem(itemId) {
   planRemoveItem(itemId);
   updatePlanBadge();
+  refreshPlanMarkers();
   renderPlannerView();
 }
 
@@ -1411,7 +1471,9 @@ function renderAddToPlanBtn(loc, layer) {
   const title = invisible
     ? 'Add to plan (historical interest — nothing visible on site)'
     : 'Add to visit plan';
-  return `<button class="${cls}" onclick="addToPlan('${loc.id}','${layer.id}',event)" title="${title}">+ Plan</button>`;
+  const mins = loc.estimatedMinutes || PLAN_MINUTES_BY_LAYER[layer.id] || 30;
+  const timeLabel = mins < 60 ? `${mins} min` : `${Math.floor(mins/60)}h${mins%60 ? ' '+mins%60+'m' : ''}`;
+  return `<button class="${cls}" onclick="addToPlan('${loc.id}','${layer.id}',event)" title="${title}">+ Plan</button><span class="card-time-hint">~${timeLabel}</span>`;
 }
 
 // ── Planner: day picker interaction ───────────────────────────────────────
@@ -1459,6 +1521,7 @@ function confirmAddToDay(locId, layerId, dayNumber) {
   const loc = layer.locations.find(l => l.id === locId);
   planAddItem(loc, layer, dayNumber);
   updatePlanBadge();
+  refreshPlanMarkers();
   closeDayPicker();
   showPlanToast(`Added to Day ${dayNumber}`);
 }
@@ -1489,6 +1552,32 @@ function toRoman(n) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
+function showWelcomeBanner() {
+  if (localStorage.getItem('almanac-welcome-seen')) return;
+  const banner = document.createElement('div');
+  banner.id = 'welcome-banner';
+  banner.className = 'welcome-banner';
+  banner.innerHTML = `
+    <div class="welcome-banner-inner">
+      <div class="welcome-banner-text">
+        <strong>Layers of Gdańsk</strong> — sixteen thematic lenses on a city that rewards curiosity.
+        Browse the Almanac, then use <strong>✦ Plan my visit</strong> to build a day-by-day itinerary.
+      </div>
+      <div class="welcome-banner-actions">
+        <button class="welcome-cta-plan" onclick="location.hash='#planner'">✦ Plan my visit</button>
+        <button class="welcome-dismiss" onclick="dismissWelcome()">Got it</button>
+      </div>
+    </div>`;
+  const mainContent = document.getElementById('main-content');
+  mainContent.insertBefore(banner, mainContent.firstChild);
+}
+
+function dismissWelcome() {
+  localStorage.setItem('almanac-welcome-seen', '1');
+  const banner = document.getElementById('welcome-banner');
+  if (banner) banner.remove();
+}
+
 function init() {
   initTheme();
   renderSidebar();
@@ -1498,6 +1587,7 @@ function init() {
   renderContents();
   renderLayers();
   renderClosing();
+  showWelcomeBanner();
 
   updatePlanBadge();
 
@@ -1830,12 +1920,22 @@ function initPlannerSearch() {
 
     results.innerHTML = matches.map(({ loc, layer }) => {
       const mins = loc.estimatedMinutes || PLAN_MINUTES_BY_LAYER[layer.id] || 30;
+      const plan = planGet();
+      let inPlanTag = '';
+      for (const day of plan.days) {
+        if (day.items.some(i => i.sourceId === loc.id)) {
+          const label = day.dayNumber === 0 ? 'Unassigned' : `Day ${day.dayNumber}`;
+          inPlanTag = `<span class="psearch-in-plan">In plan: ${label}</span>`;
+          break;
+        }
+      }
       return `
         <div class="psearch-item" onclick="plannerSearchSelect('${loc.id}','${layer.id}',event)">
           <span class="psearch-dot" style="background:${layer.colour}"></span>
           <span class="psearch-name">${escapeText(loc.nameEN || loc.namePL)}</span>
           <span class="psearch-layer">${escapeText(layer.titleEN)}</span>
           <span class="psearch-time">${planFormatMinutes(mins)}</span>
+          ${inPlanTag}
         </div>`;
     }).join('');
     results.style.display = '';
@@ -2027,5 +2127,9 @@ window.cancelCustomItem = cancelCustomItem;
 window.cancelCustomItemIfBg = cancelCustomItemIfBg;
 window.confirmCustomItem = confirmCustomItem;
 window.updateItemDuration = updateItemDuration;
+window.openInAlmanac = openInAlmanac;
+window.dismissWelcome = dismissWelcome;
+window.exportPlanJSON = exportPlanJSON;
+window.importPlanJSON = importPlanJSON;
 
 document.addEventListener('DOMContentLoaded', init);
